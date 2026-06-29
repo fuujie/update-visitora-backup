@@ -1,0 +1,49 @@
+/* .footer-sidebar {
+   position: fixed;
+   bottom: 0;
+   left: 0;
+   width: 100%;
+}
+.footer-sidebar img {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+    width: 100%;
+    max-width: 150px;
+} */
+
+/* 1. Atur parent-nya menjadi flex kolom */
+.menu-block {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Memastikan tinggi menu-block minimal seukuran layar, atau bisa diatur sesuai kebutuhan */
+    position: relative;
+}
+
+/* 2. Biarkan menu mengambil sisa ruang yang ada */
+.sidebar-menu {
+    flex: 1; 
+}
+
+/* 3. Footer otomatis mengunci di dasar menu-block */
+.footer-sidebar {
+    position: relative; /* Tidak perlu absolute/fixed lagi */
+    margin-top: auto;   /* Trik ajaib flexbox untuk mendorong footer ke paling bawah */
+    width: 100%;
+    z-index: 10;        /* Pastikan z-index aman */
+    padding: 20px 15px; /* Beri ruang aman (spacing) di bawah */
+    box-sizing: border-box;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.footer-sidebar img {
+    width: 100%;
+    max-width: 150px;
+    height: auto;
+    object-fit: contain;
+}
+ 

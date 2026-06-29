@@ -1,0 +1,11 @@
+.page-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    background-color: linear-gradient(var(--primary), var(--secondary));
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+}
