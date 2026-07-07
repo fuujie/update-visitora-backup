@@ -1,0 +1,161 @@
+/* ================================================
+   DATATABLE — USER PAGE
+   ================================================ */
+
+#user-table-wrapper .dataTable-table thead th {
+  background-color: var(--primary);
+  color: white;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Fix: simple-datatables default table-layout:fixed bikin kolom
+   sempit memaksa teks wrap per-karakter. Paksa auto + nowrap. */
+#user-table-wrapper .dataTable-table {
+  table-layout: auto !important;
+  width: 100% !important;
+}
+
+/* simple-datatables inject <colgroup><col style="width:Npx">
+   inline style ini override table-layout, jadi harus dipaksa juga */
+#user-table-wrapper .dataTable-table colgroup col {
+  width: auto !important;
+}
+
+
+#user-table-wrapper.datatable-container table th:nth-child(2),
+#user-table-wrapper.datatable-container table td:nth-child(2),
+#user-table-wrapper .datatable-container table th:nth-child(2),
+#user-table-wrapper .datatable-container table td:nth-child(2) {
+  width: 15% !important;
+}
+
+#user-table-wrapper .datatable-container table th:nth-child(3) {
+  width: 15% !important;
+  /* text-align: center; */
+}
+#user-table-wrapper .datatable-container table th:nth-child(4) {
+  width: 10% !important;
+}
+#user-table-wrapper .datatable-container table th:nth-child(5) {
+  width: 10% !important;
+}
+
+#user-table-wrapper .dataTable-table th,
+#user-table-wrapper .dataTable-table td {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+#user-table-wrapper .dataTable-table td:nth-child(2) {
+  white-space: normal !important;
+  min-width: 10%;
+}
+
+#user-table-wrapper .dataTable-table td:nth-child(5) {
+  min-width: 180px;
+}
+
+#user-table-wrapper .dataTable-table td:last-child {
+  white-space: nowrap;
+}
+
+#user-table-wrapper .dataTable-table mark {
+  background: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+}
+
+#user-table-wrapper .dataTable-top,
+#user-table-wrapper .dataTable-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+#user-table-wrapper .dataTable-selector {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
+}
+
+#user-table-wrapper .dataTable-search input {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
+  background: var(--input-background);
+}
+#user-table-wrapper .dataTable-search input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(56,82,180,0.12);
+}
+
+#user-table-wrapper .dataTable-info {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+
+#user-table-wrapper .dataTable-pagination-list {
+  display: flex;
+  gap: 0.25rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#user-table-wrapper .dataTable-pagination-list li a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+#user-table-wrapper .dataTable-pagination-list li.active a {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+#user-table-wrapper .dataTable-pagination-list li a:hover:not(.active) {
+  background: var(--muted);
+}
+#user-table-wrapper .dataTable-pagination-list li.disabled a {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Role badge */
+.role-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.role-badge.admin    { background: rgba(56,82,180,0.12);  color: var(--primary); }
+.role-badge.security { background: rgba(232,127,36,0.12); color: var(--secondary); }
+.role-badge.visitor  { background: rgba(25,135,84,0.12);  color: #198754; }
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.status-badge.active   { background: rgba(25,135,84,0.12); color: #198754; }
+.status-badge.inactive { background: rgba(212,24,61,0.12); color: var(--destructive); }
