@@ -26,8 +26,8 @@ async function initCompanyChoices(select) {
     placeholder: true,
     placeholderValue: "Select Company",
     shouldSort: false,
-    noResultsText: "Tidak ditemukan",
-    noChoicesText: "Tidak ada pilihan",
+    noResultsText: "Not found",
+    noChoicesText: "List empty",
   });
 
   try {
@@ -198,7 +198,6 @@ function initAddHandler(container) {
     const phone = container.querySelector("#add_phone").value.trim();
     const companyId = addCompanyChoices.getValue(true);
     const departmentId = addDeptChoices.getValue(true);
-    // const status = container.querySelector("#add_status").value;
 
     if (!name || !companyId || !departmentId) {
       Swal.fire({ title: "Nama, perusahaan, dan departemen wajib diisi!", icon: "warning" });

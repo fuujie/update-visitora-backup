@@ -13,6 +13,7 @@ export async function fetchVisitorCardTypes() {
   if (!res.ok) throw new Error("Gagal mengambil jenis kartu");
   // return res.json();
   const data = await res.json();
+  console.log("id card type", data);
   return { ok: res.ok, data };
 }
 

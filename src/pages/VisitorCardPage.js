@@ -4,10 +4,14 @@ import { DashboardLayout } from "../layouts/DashboardLayout.js";
 import { fetchVisitorCardTypes, fetchVisitorCard, createVisitorCard, updateVisitorCard, deleteVisitorCard } from "../services/visitor-card.js";
 import "../assets/css/styles.css";
 import "../assets/css/datatable-visitor-card.css";
+import Choices from "choices.js";
+import "choices.js/public/assets/styles/choices.min.css";
 
 let dtInstance = null;
 let addVisitorCard = null;
+let addVisitorCardChoices = null;
 let editVisitorCard = null;
+let editVisitorCardChoices = null;
 
 const STATUS_LABEL = {
   available: "Tersedia",
@@ -48,7 +52,7 @@ async function loadTable(container) {
         <tbody>
           ${
             id_cards.length === 0
-              ? `<tr><td colspan="4" class="text-center py-4 text-muted">Data kartu pengunjung kosong</td></tr>`
+              ? `<tr><td colspan="5" class="text-center py-4 text-muted">Data kartu pengunjung kosong</td></tr>`
               : id_cards
                   .map(
                     (v, i) => `
@@ -88,7 +92,7 @@ async function loadTable(container) {
           noRows: "Not found",
           info: "Showing {start} to {end} of {rows} entries",
         },
-        columns: [{ select: 6, sortable: false }],
+        columns: [{ select: 4, sortable: false }],
       });
     }
   } catch (e) {
@@ -119,13 +123,39 @@ function exportCSV(container) {
   link.download = `host_${new Date().toISOString().slice(0, 10)}.csv`;
   link.click();
 }
+// ─── Init id card type use choises library ──────────────────────────────────────────────────
+async function initIdcardTypesChoices(select) {
+  const instance = new Choices(select, {
+    searchEnabled: true,
+    searchPlaceholderValue: "Search...",
+    itemSelectText: "",
+    placeholder: true,
+    placeholderValue: "Select",
+    shouldSort: false,
+    noResultsText: "Not found",
+    noChoicesText: "List empty",
+  });
+
+  try {
+    const { cardTypes = [] } = await fetchVisitorCardTypes();
+    instance.setChoices(
+      cardTypes.map((type) => ({ value: type.id_card_type_id, label: type.id_card_type_name })),
+      "value",
+      "label",
+      false,
+    );
+  } catch (e) {
+    console.error("id type card", e);
+  }
+  return instance;
+}
 // ─── Add Handler ──────────────────────────────────────────────────
 function initAddHandler(container) {
   const btnAdd = container.querySelector("#btn-submit-add");
   const modal = bootstrap.Modal.getOrCreateInstance(container.querySelector("#modal-add-visitor-card"));
 
   btnAdd.addEventListener("click", async () => {
-    const cardTypeId = container.querySelector("#add_visitor_card_type").value.trim();
+    const cardTypeId = addVisitorCardChoices.getValue(true);
     const rawCardCode = container.querySelector("#add_visitor_card_code").value.trim();
     const rawCardNumber = container.querySelector("#add_visitor_card_number").value.trim();
 
@@ -168,10 +198,13 @@ function initAddHandler(container) {
 function initEditHandler(container) {
   const btnSubmitEdit = container.querySelector("#btn-submit-edit");
   const editModalElement = container.querySelector("#modal-edit-visitor-card");
+  if (!editModalElement) return;
+
   const editModal = bootstrap.Modal.getOrCreateInstance(editModalElement);
   const editModalBody = editModalElement.querySelector(".modal-edit-body");
   const selectStatus = container.querySelector("#edit_visitor_card_status");
-
+  const inputCardNumber = container.querySelector("#edit_visitor_card_number");
+  const inputId = container.querySelector("#edit_id");
   let originalData = {};
 
   const listStatus = [
@@ -181,7 +214,7 @@ function initEditHandler(container) {
   ];
 
   function checkFormChanges() {
-    // Perbaikan 5: Memperbaiki ID selector untuk edit card number
+    if (!inputCardNumber || !selectStatus) return;
     const currentData = {
       card_number: container.querySelector("#edit_visitor_card_number").value.trim(),
       status: selectStatus ? selectStatus.value : "available",
@@ -201,7 +234,6 @@ function initEditHandler(container) {
 
       if (selectStatus) {
         selectStatus.innerHTML = listStatus.map((s) => `<option value="${s.value}">${s.label}</option>`).join("");
-        selectStatus.value = data.status;
       }
 
       container.querySelector("#edit_id").value = data.id;
@@ -382,6 +414,8 @@ function VisitorCardPageContent() {
   `;
 
   setTimeout(async () => {
+    addVisitorCardChoices = await initIdcardTypesChoices(page.querySelector("#add_visitor_card_type"));
+
     loadTable(page);
     initAddHandler(page);
     initEditHandler(page);
