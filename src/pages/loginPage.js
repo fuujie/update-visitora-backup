@@ -98,7 +98,7 @@ function initLoginHandler(container) {
         localStorage.setItem("userRole", data.user.role);
 
         await Swal.fire({
-          title: t("login_success") || "Berhasil!",
+          title: t("Login in..") || "Login in..",
           icon: "success",
           timer: 1500,
           showConfirmButton: false,

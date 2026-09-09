@@ -1,0 +1,13 @@
+{
+  "visitor_id": 849201,
+  "name": "Ahmad Hidayat",
+  "phone_number": "+6281234567890",
+  "email": "ahmad.hidayat@techcorp.id",
+  "company_origin": "PT Tech Nusantara",
+  "id_type": "KTP",
+  "id_number": "3273012345670001",
+  "visitor_photo": "exampleUrl",
+  "identity_photo": "exampleUrl",
+  "created_at": "exampleTimeStamp",
+  "updated_at": "exampleTimeStamp"
+}

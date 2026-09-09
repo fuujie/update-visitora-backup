@@ -26,7 +26,6 @@ export async function fetchCompanyById(id) {
   return res.json();
 }
 
-// POST multipart/form-data — jangan set Content-Type, browser handle boundary
 export async function createVisitor(formData) {
   const res = await fetch(`${BASE_URL}/api/visitors`, {
     method: "POST",

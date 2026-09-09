@@ -3,7 +3,7 @@
 const MENU = {
   visitor: [
     {
-      label: "Menu",
+      label: " ",
       items: [
         { href: "#/", icon: "bi-house", text: "Dashboard" },
         {
@@ -22,7 +22,7 @@ const MENU = {
 
   security: [
     {
-      label: "Menu",
+      label: " ",
       items: [
         { href: "#/", icon: "bi-house", text: "Dashboard" },
         {
@@ -38,7 +38,7 @@ const MENU = {
           text: "Data Kunjungan",
           submenu: [
             { href: "#/regist-visitor", text: "Registrasi Pengunjung" },
-            { href: "#/visitor", text: "Pengunjung" },
+            { href: "#/visitors", text: "Pengunjung" },
             { href: "#/visiting-schedule", text: "Jadwal Kunjungan" },
             { href: "#/data-checkin", text: "Data Check-in" },
           ],
@@ -53,7 +53,7 @@ const MENU = {
           icon: "bi-archive",
           text: "Inventaris",
           submenu: [
-            { href: "#/id-card", text: "Kartu ID" },
+            { href: "#/visitor-card", text: "Kartu ID" },
             { href: "#/parking-card", text: "Kartu Parkir" },
             { href: "#/sticker-block", text: "Blok Stiker" },
             { href: "#/protective-case", text: "Case Pelindung" },
@@ -65,7 +65,7 @@ const MENU = {
 
   admin: [
     {
-      label: "Menu",
+      label: "",
       items: [
         { href: "#/", icon: "bi-house", text: "Dashboard" },
         {
@@ -81,7 +81,7 @@ const MENU = {
           text: "Data Kunjungan",
           submenu: [
             { href: "#/regist-visitor", text: "Registrasi Pengunjung" },
-            { href: "#/visitor", text: "Pengunjung" },
+            { href: "#/visitors", text: "Pengunjung" },
             { href: "#/visiting-schedule", text: "Jadwal Kunjungan" },
             { href: "#/data-checkin", text: "Data Check-in" },
           ],
@@ -96,7 +96,7 @@ const MENU = {
           icon: "bi-archive",
           text: "Inventaris",
           submenu: [
-            { href: "#/id-card", text: "Kartu ID" },
+            { href: "#/visitor-card", text: "Kartu ID" },
             { href: "#/parking-card", text: "Kartu Parkir" },
             { href: "#/sticker-block", text: "Blok Stiker" },
             { href: "#/protective-case", text: "Case Pelindung" },

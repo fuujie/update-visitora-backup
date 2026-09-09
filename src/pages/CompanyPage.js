@@ -245,7 +245,7 @@ function CompanyContent() {
     <!-- Page title -->
     <div class="page-title d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
       <div>
-        <h1>Perusahaan</h1>
+        <h1 class="text-primary">Perusahaan</h1>
         <p>Kelola data perusahaan dalam sistem</p>
       </div>
       <div class="d-flex gap-2">

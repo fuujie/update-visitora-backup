@@ -413,7 +413,7 @@ function HostContent() {
   page.innerHTML = `
     <div class="page-title d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
       <div>
-        <h1>Host</h1>
+        <h1 class="text-primary">Host</h1>
         <p>Kelola data karyawan yang dapat dikunjungi</p>
       </div>
       <div class="d-flex gap-2">

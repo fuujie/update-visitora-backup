@@ -270,7 +270,7 @@ function DepartmentContent() {
   page.innerHTML = `
     <div class="page-title d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
       <div>
-        <h1>Departemen</h1>
+        <h1 class="text-primary">Departemen</h1>
         <p>Kelola data departemen dalam sistem</p>
       </div>
       <div class="d-flex gap-2">
@@ -303,7 +303,7 @@ function DepartmentContent() {
             <div class="mb-3">
               <label class="form-label">Perusahaan <span class="text-danger">*</span></label>
               <select id="add_company" class="form-select">
-                <option value="">-- Pilih Perusahaan --</option>
+                <option value="">Select</option>
               </select>
             </div>
           </div>

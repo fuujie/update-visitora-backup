@@ -11,6 +11,8 @@ function authHeaders() {
 export async function fetchCompanies() {
   const res = await fetch(`${BASE_URL}/api/companies`, { headers: authHeaders() });
   if (!res.ok) throw new Error("Gagal mengambil data perusahaan");
+
+  // console.log("test", await res.json());
   return res.json();
 }
 

@@ -178,8 +178,10 @@ function RegistVisitorContent() {
 
   page.innerHTML = `
     <div class="page-title">
-      <h1 class="text-primary">Registrasi Pengunjung</h1>
-      <p>Tambah data pengunjung baru ke sistem</p>
+      <div>
+        <h1 class="text-primary">Registrasi Pengunjung</h1>
+        <p>Tambah data pengunjung baru ke sistem</p>
+      </div>
     </div>
 
     <div class="row">

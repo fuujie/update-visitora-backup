@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
+    "air-datepicker": "^3.6.0",
     "apexcharts": "^5.15.2",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",

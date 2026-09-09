@@ -1,107 +1,93 @@
-<script>
-  function initEditHandler(container) {
-  const btnSubmitEdit = container.querySelector("#btn-submit-edit");
-  const editModalElement = container.querySelector("#modal-edit-visitor-card");
-  if (!editModalElement) return; // Proteksi jika modal tidak ditemukan
+<form action="">
+  <div class="table-card mb-4">
+    <h3 class="text-dark">Data User</h3>
+    <div class="visitor-list-table-wrapper"></div>
+  </div>
 
-  const editModal = bootstrap.Modal.getOrCreateInstance(editModalElement);
-  const editModalBody = editModalElement.querySelector(".modal-edit-body");
-  const selectStatus = container.querySelector("#edit_visitor_card_status");
-  const inputCardNumber = container.querySelector("#edit_visitor_card_number");
-  const inputId = container.querySelector("#edit_id");
+  <div class="table-card mb-4">
+    <h3 class="text-dark">Detail Appointment</h3>
+    <div class="mb-3">
+      <label for="visit-plan" class="form-label">Visit Plan</label>
+      <div id="visit-plan">
+        <input type="date" class="form-control" id="start-date" name="startDate" />
+        <i class="bi bi-calendar-date"></i>
+        <input type="date" class="form-control" id="end-date" name="endDate" />
+        <i class="bi bi-calendar-date"></i>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label for="company-origin" class="form-label">Company Origin</label>
+      <select name="companyOrigin" id="company-origin" class="form-select">
+        <option value="">Select</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="purpose" class="form-label">Purpose</label>
+      <select name="purpose_" id="purpose" class="form-select">
+        <option value="">Select</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="" class="form-label">Vehicle Type</label>
+      <select name="purpose_" id="vehicle-type" class="form-select">
+        <option value="">Select</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="license-plate" class="form-label">License Plate</label>
+      <input type="text" class="form-control" name="licensePlate" id="license-plate" required />
+    </div>
+    <div class="mb-3">
+      <label for="employee-target" class="form-label">Employee Target</label>
+      <select name="employeeTarget" id="employee-target" class="form-select">
+        <option value="">Select</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="" class="form-label">Target Department</label>
+      <input type="text" class="form-control" id="target-department" name="targetDepartment" />
+    </div>
+    <button type="submit" class="btn btn-primary" id="create-submit">Submit</button>
+  </div>
+</form>
 
-  let originalData = {};
-
-  const listStatus = [
-    { value: "available", label: "Tersedia" },
-    { value: "in_use", label: "Dipinjam" },
-    { value: "damaged", label: "Rusak" },
-  ];
-
-  function checkFormChanges() {
-    if (!inputCardNumber || !selectStatus) return;
-    
-    const currentData = {
-      card_number: inputCardNumber.value.trim(),
-      status: selectStatus.value,
-    };
-
-    const isChanged = Object.keys(originalData).some((key) => originalData[key] !== currentData[key]);
-    btnSubmitEdit.disabled = !isChanged;
-  }
-
-  container.querySelector("#visitor-card-table-wrapper").addEventListener("click", async (e) => {
-    const btn = e.target.closest(".btn-edit");
-    if (!btn) return;
-
-    const id = btn.dataset.id;
-    try {
-      const response = await fetchVisitorCard(id);
-      // Antisipasi jika struktur API membungkus data di dalam properti 'data'
-      const card = response.data || response; 
-
-      if (card) {
-        // Render option dan pasang atribut selected pada status yang sesuai
-        if (selectStatus) {
-          selectStatus.innerHTML = listStatus
-            .map((s) => `<option value="${s.value}" ${s.value === card.status ? "selected" : ""}>${s.label}</option>`)
-            .join("");
-          selectStatus.value = card.status;
-        }
-
-        if (inputId) inputId.value = id;
-        if (inputCardNumber) inputCardNumber.value = card.card_number;
-
-        originalData = {
-          card_number: card.card_number,
-          status: card.status,
-        };
-        
-        btnSubmitEdit.disabled = true;
-        editModal.show();
-      }
-    } catch (e) {
-      console.error(e);
-      Swal.fire({ title: "Gagal mengambil data!", text: e.message, icon: "error" });
-    }
-  });
-
-  if (editModalBody) {
-    editModalBody.addEventListener("input", checkFormChanges);
-    editModalBody.addEventListener("change", checkFormChanges);
-  }
-
-  btnSubmitEdit.addEventListener("click", async () => {
-    const id = inputId ? inputId.value.trim() : "";
-    const cardNumber = inputCardNumber ? inputCardNumber.value.trim() : "";
-    const status = selectStatus ? selectStatus.value.trim() : "";
-
-    if (!id || !cardNumber || !status) {
-      Swal.fire({ title: "ID, nomor kartu, dan status wajib diisi!", icon: "warning" });
-      return;
-    }
-
-    const ori = btnSubmitEdit.innerHTML;
-    btnSubmitEdit.disabled = true;
-    btnSubmitEdit.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...`;
-
-    try {
-      const { ok, data } = await updateVisitorCard(id, { card_number: cardNumber, status });
-      if (ok) {
-        Swal.fire({ title: "Berhasil!", icon: "success", timer: 1500, showConfirmButton: false });
-        editModal.hide();
-        loadTable(container); // Pastikan fungsi loadTable tersedia di scope file Anda
-      } else {
-        Swal.fire({ title: "Gagal!", text: data?.message || "Terjadi kesalahan", icon: "error" });
-      }
-    } catch (e) {
-      console.error(e);
-      Swal.fire({ title: "Error!", text: e.message, icon: "error" });
-    } finally {
-      btnSubmitEdit.innerHTML = ori;
-      btnSubmitEdit.disabled = false;
-    }
-  });
-}
-
-</script>
+<!-- Modal list user -->
+<div class="modal fade" id="modal-list-visitor" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title section-title">Add Visitor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form action="">
+          <div class="card user-card mb-3">
+            <div class="mb-4">
+              <label for="user-name" class="form-label">Name</label>
+              <select name="userName_" id="user-name" class="form-select">
+                <option value="">Select</option>
+              </select>
+            </div>
+            <div class="mb-4">
+              <label for="identity-number" class="form-label">Identity Number</label>
+              <select name="identityNumber_" id="identity-number" class="form-select">
+                <option value="">Select</option>
+              </select>
+            </div>
+            <div class="mb-4">
+              <label for="electronic-device" class="form-label">Electronic Device</label>
+              <select name="electronicDevice_" id="electronic-device" class="form-select">
+                <option value="">Select</option>
+              </select>
+              <button class="btn" name="btnCoppy_" id="btn-coppy"><i class="bi bi-plus-circle"></i></button>
+            </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" name="deleteUser" id="delete-user"><i class="bi bi-trash"></i> Delete</button>
+        <button type="submit" class="btn btn-primary" name="addUser" id="add-user"><i class="bi bi-person-add"></i> Submit</button>
+      </div>
+        </form>
+    </div>
+  </div>
+</div>

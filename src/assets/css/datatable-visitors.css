@@ -1,0 +1,59 @@
+/* DATATABLE — VISITOR PAGE */
+#visitors-table-wrapper .dataTable-table thead th {
+    background-color: var(--primary);
+    color: white;
+    font-weight: var(--font-weight-semibold);
+}
+
+#visitors-table-wrapper .dataTable-table {
+    table-layout: auto !important;
+    width: 100% !important;   
+}
+
+#visitors-table-wrapper .dataTable-table colgroup col {
+  width: auto !important;
+}
+
+#visitors-table-wrapper.dataTable-table table th:nth-child(2),
+#visitors-table-wrapper.dataTable-table table td:nth-child(2),
+#visitors-table-wrapper .dataTable-table table th:nth-child(2),
+#visitors-table-wrapper .dataTable-table table td:nth-child(2) {
+    width: 15% !important;
+}
+
+.datatable-container table th:nth-child(2),
+.datatable-container table td:nth-child(2) {
+    width: 15% !important;
+}
+.datatable-container table th:nth-child(3),
+.datatable-container table td:nth-child(3) {
+    width: 15% !important;
+}
+.datatable-container table th:nth-child(4),
+.datatable-container table td:nth-child(4) {
+    width: 20% !important;
+}
+.datatable-container table th:nth-child(5),
+.datatable-container table td:nth-child(5) {
+    width: 20% !important;
+}
+.datatable-container table th:nth-child(6),
+.datatable-container table td:nth-child(6) {
+    width: 20% !important;
+}
+.datatable-container table th:nth-child(7),
+.datatable-container table td:nth-child(7) {
+    width: 7% !important;
+}
+
+@media (max-width: 425px) {
+    .table-card .table thead th {
+        font-size: 11px !important;
+    }
+    .datatable-container table tbody tr td {
+        font-size: 11px !important;
+    }
+    #btn-export {
+        font-size: 10px !important;
+    }
+}

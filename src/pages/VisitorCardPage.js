@@ -19,7 +19,7 @@ const STATUS_LABEL = {
   damaged: "Rusak",
 };
 
-// ─── Render tabel ────────────────────────────────────────────────
+// ─── Render table ────────────────────────────────────────────────
 async function loadTable(container) {
   if (dtInstance) {
     dtInstance.destroy();
@@ -331,7 +331,7 @@ function VisitorCardPageContent() {
   page.innerHTML = `
     <div class="page-title d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
       <div>
-        <h1>ID Cards</h1>
+        <h1 class ="text-primary">ID Cards</h1>
         <p>Kelola data inventaris kartu pengunjung</p>
       </div>
       <div class="d-flex gap-2">

@@ -6,6 +6,11 @@ import { DepartmentPage } from "../pages/DepartmentPage.js";
 import { UserPage } from "../pages/UserPage.js";
 import { HostPage } from "../pages/HostPage.js";
 import { VisitorCardPage } from "../pages/VisitorCardPage.js";
+import { ParkingCardPage } from "../pages/ParkingCardPage.js";
+import { StickerBlockPage } from "../pages/StickerBlockPage.js";
+import { ProtectiveCasePage } from "../pages/ProtectiveCasePage.js";
+import { VisitorsPage } from "../pages/VisitorsPage.js";
+import { CreateAppointmentPage } from "../pages/CreateAppointment.js";
 
 // ─── Definisi routes ────────────────────────────────────────────
 const routes = {
@@ -16,11 +21,16 @@ const routes = {
   "/department": DepartmentPage,
   "/users": UserPage,
   "/host": HostPage,
-  "/id-card": VisitorCardPage,
+  "/visitor-card": VisitorCardPage,
+  "/parking-card": ParkingCardPage,
+  "/sticker-block": StickerBlockPage,
+  "/protective-case": ProtectiveCasePage,
+  "/visitors": VisitorsPage,
+  "/visiting-schedule": CreateAppointmentPage,
 };
 
 // ─── Auth guard ─────────────────────────────────────────────────
-const protectedRoutes = ["/dashboard", "/regist-visitor", "/company", "/department", "/users", "/host", "/id-card"];
+const protectedRoutes = ["/dashboard", "/regist-visitor", "/company", "/department", "/users", "/host", "/visitor-card", "/parking-card", "/sticker-block", "/protective-case", "/visitors", "/visiting-schedule"];
 
 function isAuthenticated() {
   return !!localStorage.getItem("token");

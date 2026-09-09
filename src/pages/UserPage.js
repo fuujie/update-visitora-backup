@@ -306,7 +306,7 @@ function UserContent() {
   page.innerHTML = `
     <div class="page-title d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
       <div>
-        <h1>Pengguna</h1>
+        <h1 class="text-primary">Pengguna</h1>
         <p>Kelola akun pengguna sistem</p>
       </div>
       <div class="d-flex gap-2">
