@@ -5,25 +5,534 @@ import AirDatepicker from "air-datepicker";
 import localeEn from "air-datepicker/locale/en";
 import { DataTable } from "simple-datatables";
 import "choices.js/public/assets/styles/choices.min.css";
+import "air-datepicker/air-datepicker.css";
 import "../assets/css/create-appointment.css";
 import "../assets/css/styles.css";
+import { fetchVisitors } from "../services/visitor-list";
 
-let dtInstance = null;
+const AppState = {
+  dtInstance: null,
+  transactionUsers: [],
+  currentEditId: null,
 
-// Render table add user
-async function loadTableAddUser(container) {
-  if (dtInstance) {
-    dtInstance.destroy();
-    dtInstance = null;
+  addUser(userData) {
+    this.transactionUsers.push({
+      id: Date.now().toString(),
+      ...userData,
+    });
+  },
+
+  updateUser(id, userData) {
+    this.transactionUsers = this.transactionUsers.map((item) => (item.id === id ? { ...item, ...userData } : item));
+  },
+
+  removeUser(id) {
+    this.transactionUsers = this.transactionUsers.filter((item) => item.id !== id);
+  },
+
+  getUser(id) {
+    return this.transactionUsers.find((item) => item.id === id);
+  },
+
+  clear() {
+    this.dtInstance = null;
+    this.transactionUsers = [];
+    this.currentEditId = null;
+  },
+};
+
+// DEVICE MANAGEMENT
+function createDeviceItem() {
+  return `
+    <div class="device-item d-flex align-items-center gap-2 mb-2">
+      <select name="electronicDevice[]" class="form-select electronic-device">
+        <option value="">Select</option>
+        <option value="laptop">Laptop</option>
+        <option value="handphone">Handphone</option>
+        <option value="camera">Camera</option>
+      </select>
+
+      <button type="button" class="btn btn-add btn-more-device" data-action="add-device">
+        <i class="bi bi-plus-circle"></i>
+      </button>
+
+      <button type="button" class="btn btn-remove-device d-none" data-action="remove-device">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  `;
+}
+function addDevice(userCard) {
+  const deviceList = userCard.querySelector(".device-list");
+  if (!deviceList) return;
+
+  const deviceItem = document.createElement("div");
+  deviceItem.className = "device-item d-flex align-items-center gap-2 mb-2";
+  deviceItem.innerHTML = `
+    <select name="electronicDevice[]" class="form-select electronic-device">
+      <option value="">Select</option>
+      <option value="handphone">Handphone</option>
+    </select>
+
+    <button type="button" class="btn btn-add btn-more-device" data-action="add-device">
+      <i class="bi bi-plus-circle"></i>
+    </button>
+
+    <button type="button" class="btn btn-remove-device" data-action="remove-device">
+      <i class="bi bi-trash"></i>
+    </button>
+  `;
+
+  deviceList.appendChild(deviceItem);
+  updateDeviceButtons(userCard);
+}
+function removeDevice(deviceItem) {
+  const userCard = deviceItem.closest(".user-card");
+  if (!userCard) return;
+
+  const deviceList = userCard.querySelector(".device-list");
+  if (!deviceList) return;
+
+  const deviceItems = deviceList.querySelectorAll(".device-item");
+  if (deviceItems.length <= 1) return;
+
+  deviceItem.remove();
+  updateDeviceButtons(userCard);
+}
+function updateDeviceButtons(userCard) {
+  const deviceItems = userCard.querySelectorAll(".device-item");
+
+  deviceItems.forEach((item, index) => {
+    const removeButton = item.querySelector('[data-action="remove-device"]');
+    const addButton = item.querySelector('[data-action="add-device"]');
+
+    if (!removeButton || !addButton) return;
+
+    addButton.classList.toggle("d-none", index !== deviceItems.length - 1);
+    removeButton.classList.toggle("d-none", deviceItems.length <= 1);
+  });
+}
+
+// USER CARD MANAGEMENT
+async function createUserCard() {
+  try {
+    const { visitors = [] } = await fetchVisitors();
+    if (dtInstance) {
+      dtInstance.destroy();
+      dtInstance = null;
+    }
+    const userCard = document.createElement("div");
+    userCard.className = "card user-card mb-3 clone-form-group";
+    
+    userCard.innerHTML = `
+        ${ visitors.length === 0 ? 
+          `
+          <div class="card" aria-hidden="true">
+            <div class="card-body">
+              <p class="card-text placeholder-glow">
+                <span class="placeholder col-7"></span>
+              </p>
+            </div>
+          </div>
+          ` : visitors.map((v,i) => `
+            <button type="button" class="btn btn-remove-clone" data-action="remove-user">
+              <i class="bi bi-trash"></i>
+            </button>
+
+            <div class="mb-4">
+              <label class="form-label">Name</label>
+              <select name="userName[]" class="form-select user-name">
+                <option value="">Select</option>
+                <option value="${}">Fuji</option>
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label">Identity Number</label>
+              <select name="identityNumber[]" class="form-select identity-number">
+                <option value="">Select</option>
+                <option value="123123">123123</option>
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label">Electronic Device</label>
+              <div class="device-list">
+                ${createDeviceItem()}
+              </div>
+            </div>
+          `)
+        }
+      
+    `;
+  return userCard;
+
+  }
+  
+
+}
+function removeUser(userCard) {
+  const userList = userCard.closest(".user-card-list");
+  if (!userList) return;
+
+  const userCards = userList.querySelectorAll(".user-card");
+  if (userCards.length <= 1) return;
+
+  userCard.remove();
+  updateModalScroll();
+}
+
+// MODAL MANAGEMENT
+function updateModalScroll() {
+  const modalEl = document.querySelector("#modal-list-visitor");
+  if (!modalEl) return;
+
+  const modalBody = modalEl.querySelector(".modal-body");
+  if (!modalBody) return;
+
+  const userCards = modalBody.querySelectorAll(".user-card");
+  modalBody.classList.toggle("has-overflow", userCards.length > 1);
+}
+function addMoreUserToModal() {
+  const modalEl = document.querySelector("#modal-list-visitor");
+  const userCardList = modalEl?.querySelector(".user-card-list");
+
+  if (!userCardList) return;
+
+  const cloneUser = createUserCard();
+  userCardList.appendChild(cloneUser);
+  updateModalScroll();
+}
+function getModalFormData() {
+  const modalEl = document.querySelector("#modal-list-visitor");
+  if (!modalEl) return [];
+
+  const cards = modalEl.querySelectorAll(".user-card");
+  const tempUsersData = [];
+
+  cards.forEach((card) => {
+    const userName = card.querySelector(".user-name").value;
+    const identityNumber = card.querySelector(".identity-number").value;
+
+    // FIX: Query selector yang benar untuk electronic device
+    const devices = Array.from(card.querySelectorAll(".electronic-device"))
+      .map((select) => select.value)
+      .filter((val) => val.trim() !== "");
+
+    if (userName || identityNumber) {
+      tempUsersData.push({
+        userName,
+        identityNumber,
+        devices,
+      });
+    }
+  });
+
+  return tempUsersData;
+}
+function resetModalForm() {
+  const modalEl = document.querySelector("#modal-list-visitor");
+  if (!modalEl) return;
+
+  const form = modalEl.querySelector("#form-modal");
+  const userCardList = modalEl.querySelector(".user-card-list");
+
+  if (form) form.reset();
+  if (userCardList) userCardList.innerHTML = createUserCard();
+
+  updateModalScroll();
+}
+
+// TABLE MANAGEMENT
+async function loadTableUserList() {
+  const wrapper = document.querySelector(".visitor-list-table-wrapper");
+  if (!wrapper) return;
+
+  // Clear existing instance
+  if (AppState.dtInstance) {
+    AppState.dtInstance.destroy();
+    AppState.dtInstance = null;
   }
 
-  const wrapper = container.querySelector("#visitor-list-table-wrapper");
-  wrapper.innerHTML = `<div class="text-center py-4 text-muted">
-    <div class="spinner-border spinner-border-sm me-2"></div> Choose user from add data
-  </div>`;
-}
-// async function
+  // If no users
+  if (AppState.transactionUsers.length === 0) {
+    wrapper.innerHTML = `
+      <div class="text-center py-4 text-muted">
+        <i class="bi bi-search-heart-fill"></i>
+        Choose user from add data
+      </div>
+    `;
+    return;
+  }
 
+  // Build single table with all users
+  const rows = AppState.transactionUsers
+    .map((group, index) => {
+      // const userSummary = group.users.map((u) => `${u.userName || "No Name"} (${u.devices.join(", ")})`).join(" | ");
+      const deviceDisplay = group.users.map((u) => `${u.devices.join(", ")}`).join(" | ");
+
+      const userName = group.users.map((u) => u.userName).join(" | ");
+      const identityNumber = group.users.map((u) => u.identityNumber).join(" | ");
+
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${userName || "-"}</td>
+          <td>${identityNumber || "-"}</td>
+          <td>${deviceDisplay || "-"}</td>
+          <td>
+            <button type="button" class="btn btn-sm btn-table-edit btn-info" data-edit-id="${group.id}" data-bs-toggle="modal" data-bs-target="#modal-list-visitor">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-table-delete btn-warning" data-delete-id="${group.id}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  wrapper.innerHTML = `
+    <table id="tempUser-table" class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Name</th>
+          <th>Identity Number</th>
+          <th>Electronic Device</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  `;
+
+  const tableEl = wrapper.querySelector("#tempUser-table");
+  AppState.dtInstance = new DataTable(tableEl, {
+    searchable: true,
+    fixedHeight: false,
+    perPageSelect: [10, 25, 50],
+    labels: {
+      placeholder: "Search...",
+      perPage: " ",
+      noRows: "Not found",
+      info: "Showing {start}-{end} from {rows} data",
+    },
+  });
+
+  // Attach event listeners
+  attachTableEventListeners();
+}
+function attachTableEventListeners() {
+  const wrapper = document.querySelector(".visitor-list-table-wrapper");
+  if (!wrapper) return;
+
+  wrapper.addEventListener("click", (e) => {
+    const editBtn = e.target.closest("[data-edit-id]");
+    const deleteBtn = e.target.closest("[data-delete-id]");
+
+    if (editBtn) {
+      e.preventDefault();
+      const id = editBtn.dataset.editId;
+      editUserData(id);
+    }
+
+    if (deleteBtn) {
+      e.preventDefault();
+      const id = deleteBtn.dataset.deleteId;
+      deleteUserData(id);
+    }
+  });
+}
+
+// EDIT & DELETE OPERATIONS
+function editUserData(id) {
+  const userData = AppState.getUser(id);
+  if (!userData) return;
+
+  AppState.currentEditId = id;
+
+  // Populate modal dengan data yang ada
+  const modalEl = document.querySelector("#modal-list-visitor");
+  const userCardList = modalEl?.querySelector(".user-card-list");
+
+  if (!userCardList) return;
+
+  // Clear existing cards
+  userCardList.innerHTML = "";
+
+  // Populate dengan data yang ada
+  userData.users.forEach((user) => {
+    const userCard = createUserCard();
+    userCardList.appendChild(userCard);
+
+    // Set values
+    const nameSelect = userCard.querySelector(".user-name");
+    const idSelect = userCard.querySelector(".identity-number");
+
+    if (nameSelect) nameSelect.value = user.userName;
+    if (idSelect) idSelect.value = user.identityNumber;
+
+    // Set devices
+    const deviceList = userCard.querySelector(".device-list");
+    deviceList.innerHTML = "";
+
+    user.devices.forEach((device, idx) => {
+      const deviceItem = document.createElement("div");
+      deviceItem.className = "device-item d-flex align-items-center gap-2 mb-2";
+      deviceItem.innerHTML = `
+        <select name="electronicDevice[]" class="form-select electronic-device">
+          <option value="">Select</option>
+          <option value="handphone">Handphone</option>
+          <option value="${device}" selected>${device}</option>
+        </select>
+
+        <button type="button" class="btn btn-add btn-more-device" data-action="add-device">
+          <i class="bi bi-plus-circle"></i>
+        </button>
+
+        <button type="button" class="btn btn-remove-device ${idx === 0 ? "d-none" : ""}" data-action="remove-device">
+          <i class="bi bi-trash"></i>
+        </button>
+      `;
+      deviceList.appendChild(deviceItem);
+    });
+
+    updateDeviceButtons(userCard);
+  });
+
+  updateModalScroll();
+
+  // Show modal
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+}
+
+function deleteUserData(id) {
+  Swal.fire({
+    title: "Delete Confirmation",
+    text: "Are you sure want to delete this user data?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      AppState.removeUser(id);
+      loadTableUserList();
+      Swal.fire("Deleted!", "User data has been deleted.", "success");
+    }
+  });
+}
+
+// FORM EVENT HANDLERS
+function setupFormEventHandlers(formModal) {
+  if (!formModal) return;
+
+  // Add User Button (Add more user dalam modal)
+  const btnClone = formModal.querySelector("#btn-clone-add-user");
+  if (btnClone) {
+    btnClone.addEventListener("click", (e) => {
+      e.preventDefault();
+      addMoreUserToModal();
+    });
+  }
+
+  // Device dan User management dalam modal
+  formModal.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("[data-action]");
+    if (!actionButton) return;
+
+    const action = actionButton.dataset.action;
+    const userCard = actionButton.closest(".user-card");
+
+    if (action === "add-device") {
+      event.preventDefault();
+      if (userCard) addDevice(userCard);
+    }
+
+    if (action === "remove-device") {
+      event.preventDefault();
+      const deviceItem = actionButton.closest(".device-item");
+      if (deviceItem) removeDevice(deviceItem);
+    }
+
+    if (action === "remove-user") {
+      event.preventDefault();
+      if (userCard) removeUser(userCard);
+    }
+  });
+
+  // Form Submit (Save button pada modal footer)
+  const submitBtn = document.querySelector("#add-user");
+  if (submitBtn) {
+    submitBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const tempUsersData = getModalFormData();
+
+      if (tempUsersData.length === 0) {
+        Swal.fire("Warning", "Please add at least one user", "warning");
+        return;
+      }
+
+      if (AppState.currentEditId) {
+        AppState.updateUser(AppState.currentEditId, { users: tempUsersData });
+        AppState.currentEditId = null;
+        Swal.fire("Success", "User data updated successfully", "success");
+      } else {
+        AppState.addUser({ users: tempUsersData });
+        Swal.fire("Success", "User data added successfully", "success");
+      }
+
+      resetModalForm();
+
+      // Close modal
+      const modalEl = document.querySelector("#modal-list-visitor");
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal?.hide();
+
+      loadTableUserList();
+    });
+  }
+}
+
+// MAIN FORM SUBMISSION
+function setupMainFormHandler(mainForm) {
+  if (!mainForm) return;
+
+  mainForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    if (AppState.transactionUsers.length === 0) {
+      Swal.fire("Warning", "Please add user data first", "warning");
+      return;
+    }
+
+    // Collect form data
+    const formData = new FormData(mainForm);
+    const data = {
+      users: AppState.transactionUsers,
+      appointment: Object.fromEntries(formData),
+    };
+
+    console.log("Form submitted with data:", data);
+
+    // TODO: Send to backend
+    // submitToBackend(data);
+
+    Swal.fire("Success", "Appointment created successfully", "success").then(() => {
+      // Reset everything
+      AppState.clear();
+      mainForm.reset();
+      loadTableUserList();
+    });
+  });
+}
 // Content
 function createAppointmentContent() {
   const page = document.createElement("div");
@@ -39,7 +548,7 @@ function createAppointmentContent() {
       </div>
     </div>
 
-    <form action="">
+    <form action="" id="main-transaction-form">
       <div class="table-card mb-4 p-4">
         <h3 class="text-dark section-title fw-semibold">Data User</h3>
         <div class="visitor-list-table-wrapper"></div>
@@ -47,8 +556,9 @@ function createAppointmentContent() {
 
       <div class="table-card mb-4 p-4">
         <h3 class="text-dark section-title fw-semibold">Detail Appointment</h3>
+
         <div class="mb-3">
-          <label for="visit-plan" class="form-label">Visit Plan</label>
+          <label for="visit-plan" class="form-label"> Visit Plan </label>
           <div id="visit-plan">
             <input type="date" class="form-control" id="start-date" name="startDate" />
             <i class="bi bi-calendar-date"></i>
@@ -56,86 +566,109 @@ function createAppointmentContent() {
             <i class="bi bi-calendar-date"></i>
           </div>
         </div>
+
         <div class="mb-3">
-          <label for="company-origin" class="form-label">Company Origin</label>
+          <label for="company-origin" class="form-label"> Company Origin</label>
           <select name="companyOrigin" id="company-origin" class="form-select">
             <option value="">Select</option>
           </select>
         </div>
+
         <div class="mb-3">
-          <label for="purpose" class="form-label">Purpose</label>
+          <label for="purpose" class="form-label"> Purpose</label>
           <select name="purpose_" id="purpose" class="form-select">
             <option value="">Select</option>
           </select>
         </div>
+
         <div class="mb-3">
-          <label for="" class="form-label">Vehicle Type</label>
-          <select name="purpose_" id="vehicle-type" class="form-select">
+          <label for="vehicle-type" class="form-label">Vehicle Type</label>
+          <select name="vehicleType" id="vehicle-type" class="form-select">
             <option value="">Select</option>
           </select>
         </div>
+
         <div class="mb-3">
-          <label for="license-plate" class="form-label">License Plate</label>
+          <label for="license-plate" class="form-label"> License Plate</label>
           <input type="text" class="form-control" name="licensePlate" id="license-plate" required />
         </div>
+
         <div class="mb-3">
-          <label for="employee-target" class="form-label">Employee Target</label>
+          <label for="employee-target" class="form-label"> Employee Target </label>
           <select name="employeeTarget" id="employee-target" class="form-select">
             <option value="">Select</option>
           </select>
         </div>
+
         <div class="mb-3">
-          <label for="" class="form-label">Target Department</label>
+          <label for="target-department" class="form-label"> Target Department </label>
           <input type="text" class="form-control" id="target-department" name="targetDepartment" />
         </div>
+
         <button type="submit" class="btn btn-primary" id="create-submit">Submit</button>
       </div>
     </form>
 
     <!-- Modal list user -->
     <div class="modal fade" id="modal-list-visitor" tabindex="-1">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title section-title">Add Visitor</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
+
           <div class="modal-body">
-            <form action="">
-              <div class="card user-card mb-3">
-                <div class="mb-4">
-                  <label for="user-name" class="form-label">Name</label>
-                  <select name="userName_" id="user-name" class="form-select">
-                    <option value="">Select</option>
-                  </select>
-                </div>
-                <div class="mb-4">
-                  <label for="identity-number" class="form-label">Identity Number</label>
-                  <select name="identityNumber_" id="identity-number" class="form-select">
-                    <option value="">Select</option>
-                  </select>
-                </div>
-                <div class="mb-4">
-                  <label for="electronic-device" class="form-label">Electronic Device</label>
-                  <select name="electronicDevice_" id="electronic-device" class="form-select">
-                    <option value="">Select</option>
-                  </select>
-                  <button class="btn" name="btnCoppy_" id="btn-coppy"><i class="bi bi-plus-circle"></i></button>
+            <form action="" id="form-modal">
+              <div class="user-card-list">
+                <div class="card user-card mb-3">
+                  <div class="mb-4">
+                    <label class="form-label"> Name </label>
+                      <select name="userName[]" class="form-select user-name">
+                        <option value="">Select</option>
+                        <option value="fuji">Fuji</option>
+                      </select>
+                  </div>
+                  <div class="mb-4">
+                    <label class="form-label"> Identity Number </label>
+
+                    <select name="identityNumber[]" class="form-select identity-number">
+                      <option value="">Select</option>
+                      <option value="123123">123123</option>
+                    </select>
+                  </div>
+                  <div class="mb-4">
+                    <label class="form-label"> Electronic Device </label>
+                    <div class="device-list">${createDeviceItem()}</div>
+                  </div>
                 </div>
               </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-danger" name="deleteUser" id="delete-user"><i class="bi bi-trash"></i> Delete</button>
-            <button type="submit" class="btn btn-primary" name="addUser" id="add-user"><i class="bi bi-person-add"></i> Submit</button>
-          </div>
+              <button type="button" class="btn btn-outline-secondary btn-modal-clone" id="btn-clone-add-user">
+                Add more user
+              </button>
             </form>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary btn-modal-submit" id="add-user">
+              <i class="bi bi-person-add"></i>
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </div>
-    `;
+  `;
+
   setTimeout(() => {
-    loadTableAddUser(page);
+    const formModal = page.querySelector("#form-modal");
+    const mainForm = page.querySelector("#main-transaction-form");
+
+    setupFormEventHandlers(formModal);
+    setupMainFormHandler(mainForm);
+    loadTableUserList();
   }, 0);
+
   return page;
 }
 

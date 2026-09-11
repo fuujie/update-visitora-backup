@@ -4,10 +4,69 @@
     }
 }
 .modal-header {
-    background-color: rgba(232, 127, 36, 0.5);
-    backdrop-filter: blur(5px) !important;
-    -webkit-backdrop-filter: blur(5px) !important;
+    background-color: var(--secondary-disabled);
 }
 .user-card {
     padding: 10px;
+}
+.btn-add {
+    align-self: stretch;
+    width: 38px;
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-add i {
+    font-size: 24px;
+    line-height: 1;
+}
+.btn-modal-clone, .btn-modal-submit {
+    border-radius: 20px;
+}
+.btn-modal-clone {
+    width: 100%;
+    border-style: dotted;
+}
+.btn-remove-clone {
+    width: 100%;
+    max-width: 1rem;
+    display: flex;
+    align-items: center;
+}
+.btn-remove-clone {
+    border: 1px solid red;
+}
+.card.user-card .btn-remove-clone {
+  position: absolute;
+  top: 2px;                  
+  right: 2px;                
+  width: 24px;                
+  height: 24px;               
+  padding: 15px;                 
+  line-height: 1;             
+  font-size: 20px;            
+  font-weight: bold;
+  color: #ff0000;   
+  background: rgba(255, 193, 193, 0.5);    
+  border: none;               
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;  
+  transition: color 0.2s ease, background-color 0.2s ease;
+  border-radius: 10px;         
+}
+.card.user-card .btn-remove-clone:hover {
+  transform: scale(1.25);     
+}
+.table-card h3 {
+    font-size: 1rem;
+}
+#visit-plan {
+    display: flex;
+}
+.btn-table-edit, .btn-table-delete {
+    border-radius: 10%;
 }
