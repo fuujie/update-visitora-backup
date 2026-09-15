@@ -9,11 +9,13 @@
   import "air-datepicker/air-datepicker.css";
   import "../assets/css/create-appointment.css";
   import "../assets/css/styles.css";
+  import { fetchVisitors } from "../services/visitor-list";
 
   const AppState = {
     dtInstance: null,
     transactionUsers: [],
     currentEditId: null,
+    visitorsCache: [],
 
     addUser(userData) {
       this.transactionUsers.push({
@@ -40,6 +42,16 @@
       this.currentEditId = null;
     },
   };
+
+  // VISITOR CACHE (fetch once, reuse for every card build — this is what lets
+  // buildUserCard() below stay synchronous instead of returning a Promise)
+  async function getVisitorsCache() {
+    if (AppState.visitorsCache.length === 0) {
+      const { visitors = [] } = await fetchVisitors();
+      AppState.visitorsCache = visitors;
+    }
+    return AppState.visitorsCache;
+  }
 
   // DEVICE MANAGEMENT
   function createDeviceItem() {
@@ -71,6 +83,9 @@
     deviceItem.innerHTML = `
     <select name="electronicDevice[]" class="form-select electronic-device">
       <option value="">Select</option>
+      <option value="laptop">Laptop</option>
+      <option value="handphone">Handphone</option>
+      <option value="camera">Camera</option>
     </select>
 
     <button type="button" class="btn btn-add btn-more-device" data-action="add-device">
@@ -113,40 +128,69 @@
   }
 
   // USER CARD MANAGEMENT
-  function createUserCard() {
+  // Synchronous now — it just builds DOM from data that's already been fetched
+  // (see getVisitorsCache). isClone controls whether the "remove" button shows:
+  // the original/main card can't be deleted, only cloned cards can.
+  function buildUserCard(visitors, isClone = false) {
     const userCard = document.createElement("div");
     userCard.className = "card user-card mb-3 clone-form-group";
+
+    const nameOptions = visitors.map((v) => `<option value="${v.name}">${v.name}</option>`).join("");
+    const idOptions = visitors.map((v) => `<option value="${v.identity_number}">${v.identity_number}</option>`).join("");
+
     userCard.innerHTML = `
+    ${
+      isClone
+        ? `
       <button type="button" class="btn btn-remove-clone" data-action="remove-user">
         <i class="bi bi-trash"></i>
       </button>
+    `
+        : ""
+    }
 
-      <div class="mb-4">
-        <label class="form-label">Name</label>
-        <select name="userName[]" class="form-select user-name">
-          <option value="">Select</option>
-          <option value="fuji">Fuji</option>
-        </select>
-      </div>
+    <div class="mb-4">
+      <label class="form-label">Name</label>
+      <select name="userName[]" class="form-select user-name">
+        <option value="">Select</option>
+        ${nameOptions || `<option value="" disabled>No data</option>`}
+      </select>
+    </div>
 
-      <div class="mb-4">
-        <label class="form-label">Identity Number</label>
-        <select name="identityNumber[]" class="form-select identity-number">
-          <option value="">Select</option>
-          <option value="123123">123123</option>
-        </select>
-      </div>
+    <div class="mb-4">
+      <label class="form-label">Identity Number</label>
+      <select name="identityNumber[]" class="form-select identity-number">
+        <option value="">Select</option>
+        ${idOptions || `<option value="" disabled>No data</option>`}
+      </select>
+    </div>
 
-      <div class="mb-4">
-        <label class="form-label">Electronic Device</label>
-        <div class="device-list">
-          ${createDeviceItem()}
-        </div>
-      </div>
-    `;
+    <div class="mb-4">
+      <label class="form-label">Electronic Device</label>
+      <div class="device-list">${createDeviceItem()}</div>
+    </div>
+  `;
 
+    attachAutoFillListener(userCard);
     return userCard;
   }
+
+  // Name select and Identity Number select are built from the SAME visitors
+  // array in the SAME order, so their option lists line up index-for-index.
+  // Picking one just mirrors the selectedIndex onto the other — no manual
+  // lookup/array.find() needed.
+  function attachAutoFillListener(userCard) {
+    const nameSelect = userCard.querySelector(".user-name");
+    const idSelect = userCard.querySelector(".identity-number");
+
+    nameSelect.addEventListener("change", () => {
+      if (nameSelect.selectedIndex > 0) idSelect.selectedIndex = nameSelect.selectedIndex;
+    });
+    idSelect.addEventListener("change", () => {
+      if (idSelect.selectedIndex > 0) nameSelect.selectedIndex = idSelect.selectedIndex;
+    });
+  }
+
   function removeUser(userCard) {
     const userList = userCard.closest(".user-card-list");
     if (!userList) return;
@@ -169,14 +213,13 @@
     const userCards = modalBody.querySelectorAll(".user-card");
     modalBody.classList.toggle("has-overflow", userCards.length > 1);
   }
-  function addMoreUserToModal() {
+  async function addMoreUserToModal() {
     const modalEl = document.querySelector("#modal-list-visitor");
     const userCardList = modalEl?.querySelector(".user-card-list");
-
     if (!userCardList) return;
 
-    const cloneUser = createUserCard();
-    userCardList.appendChild(cloneUser);
+    const visitors = await getVisitorsCache();
+    userCardList.appendChild(buildUserCard(visitors, true)); // clone → has remove button
     updateModalScroll();
   }
   function getModalFormData() {
@@ -190,7 +233,6 @@
       const userName = card.querySelector(".user-name").value;
       const identityNumber = card.querySelector(".identity-number").value;
 
-      // FIX: Query selector yang benar untuk electronic device
       const devices = Array.from(card.querySelectorAll(".electronic-device"))
         .map((select) => select.value)
         .filter((val) => val.trim() !== "");
@@ -206,7 +248,7 @@
 
     return tempUsersData;
   }
-  function resetModalForm() {
+  async function resetModalForm() {
     const modalEl = document.querySelector("#modal-list-visitor");
     if (!modalEl) return;
 
@@ -214,7 +256,12 @@
     const userCardList = modalEl.querySelector(".user-card-list");
 
     if (form) form.reset();
-    if (userCardList) userCardList.innerHTML = createUserCard();
+
+    if (userCardList) {
+      userCardList.innerHTML = "";
+      const visitors = await getVisitorsCache();
+      userCardList.appendChild(buildUserCard(visitors, false)); // main card, no remove button
+    }
 
     updateModalScroll();
   }
@@ -224,38 +271,39 @@
     const wrapper = document.querySelector(".visitor-list-table-wrapper");
     if (!wrapper) return;
 
-    // Clear existing instance
     if (AppState.dtInstance) {
       AppState.dtInstance.destroy();
       AppState.dtInstance = null;
     }
 
-    // If no users
     if (AppState.transactionUsers.length === 0) {
       wrapper.innerHTML = `
       <div class="text-center py-4 text-muted">
-        <div class="spinner-border spinner-border-sm me-2"></div>
+        <i class="bi bi-search-heart-fill"></i>
         Choose user from add data
       </div>
     `;
       return;
     }
 
-    // Build single table with all users
     const rows = AppState.transactionUsers
       .map((group, index) => {
-        const userSummary = group.users.map((u) => `${u.userName || "No Name"} (${u.devices.join(", ")})`).join(" | ");
+        const deviceDisplay = group.users.map((u) => `${u.devices.join(", ")}`).join(" | ");
+        const userName = group.users.map((u) => u.userName).join(" | ");
+        const identityNumber = group.users.map((u) => u.identityNumber).join(" | ");
 
         return `
         <tr>
           <td>${index + 1}</td>
-          <td>${userSummary}</td>
+          <td>${userName || "-"}</td>
+          <td>${identityNumber || "-"}</td>
+          <td>${deviceDisplay || "-"}</td>
           <td>
-            <button type="button" class="btn btn-sm btn-warning" data-edit-id="${group.id}">
-              <i class="bi bi-pencil"></i> Edit
+            <button type="button" class="btn btn-sm btn-table-edit btn-info" data-edit-id="${group.id}" data-bs-toggle="modal" data-bs-target="#modal-list-visitor">
+              <i class="bi bi-pencil"></i>
             </button>
-            <button type="button" class="btn btn-sm btn-danger" data-delete-id="${group.id}">
-              <i class="bi bi-trash"></i> Delete
+            <button type="button" class="btn btn-sm btn-table-delete btn-warning" data-delete-id="${group.id}">
+              <i class="bi bi-trash"></i>
             </button>
           </td>
         </tr>
@@ -264,19 +312,21 @@
       .join("");
 
     wrapper.innerHTML = `
-      <table id="tempUser-table" class="table table-hover mb-0">
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>User Details</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-    `;
+    <table id="tempUser-table" class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Name</th>
+          <th>Identity Number</th>
+          <th>Electronic Device</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  `;
 
     const tableEl = wrapper.querySelector("#tempUser-table");
     AppState.dtInstance = new DataTable(tableEl, {
@@ -291,7 +341,6 @@
       },
     });
 
-    // Attach event listeners
     attachTableEventListeners();
   }
   function attachTableEventListeners() {
@@ -304,47 +353,39 @@
 
       if (editBtn) {
         e.preventDefault();
-        const id = editBtn.dataset.editId;
-        editUserData(id);
+        editUserData(editBtn.dataset.editId);
       }
 
       if (deleteBtn) {
         e.preventDefault();
-        const id = deleteBtn.dataset.deleteId;
-        deleteUserData(id);
+        deleteUserData(deleteBtn.dataset.deleteId);
       }
     });
   }
 
   // EDIT & DELETE OPERATIONS
-  function editUserData(id) {
+  async function editUserData(id) {
     const userData = AppState.getUser(id);
     if (!userData) return;
 
     AppState.currentEditId = id;
 
-    // Populate modal dengan data yang ada
     const modalEl = document.querySelector("#modal-list-visitor");
     const userCardList = modalEl?.querySelector(".user-card-list");
-
     if (!userCardList) return;
 
-    // Clear existing cards
     userCardList.innerHTML = "";
+    const visitors = await getVisitorsCache();
 
-    // Populate dengan data yang ada
-    userData.users.forEach((user) => {
-      const userCard = createUserCard();
+    userData.users.forEach((user, index) => {
+      const userCard = buildUserCard(visitors, index !== 0); // first card = main, rest = clones
       userCardList.appendChild(userCard);
 
-      // Set values
       const nameSelect = userCard.querySelector(".user-name");
       const idSelect = userCard.querySelector(".identity-number");
-
       if (nameSelect) nameSelect.value = user.userName;
       if (idSelect) idSelect.value = user.identityNumber;
 
-      // Set devices
       const deviceList = userCard.querySelector(".device-list");
       deviceList.innerHTML = "";
 
@@ -354,7 +395,9 @@
         deviceItem.innerHTML = `
         <select name="electronicDevice[]" class="form-select electronic-device">
           <option value="">Select</option>
-          <option value="${device}" selected>${device}</option>
+          <option value="laptop">Laptop</option>
+          <option value="handphone">Handphone</option>
+          <option value="camera">Camera</option>
         </select>
 
         <button type="button" class="btn btn-add btn-more-device" data-action="add-device">
@@ -366,6 +409,9 @@
         </button>
       `;
         deviceList.appendChild(deviceItem);
+
+        const select = deviceItem.querySelector(".electronic-device");
+        if (select) select.value = device;
       });
 
       updateDeviceButtons(userCard);
@@ -373,7 +419,6 @@
 
     updateModalScroll();
 
-    // Show modal
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
   }
@@ -400,7 +445,6 @@
   function setupFormEventHandlers(formModal) {
     if (!formModal) return;
 
-    // Add User Button (Add more user dalam modal)
     const btnClone = formModal.querySelector("#btn-clone-add-user");
     if (btnClone) {
       btnClone.addEventListener("click", (e) => {
@@ -409,7 +453,6 @@
       });
     }
 
-    // Device dan User management dalam modal
     formModal.addEventListener("click", (event) => {
       const actionButton = event.target.closest("[data-action]");
       if (!actionButton) return;
@@ -434,7 +477,6 @@
       }
     });
 
-    // Form Submit (Save button pada modal footer)
     const submitBtn = document.querySelector("#add-user");
     if (submitBtn) {
       submitBtn.addEventListener("click", (e) => {
@@ -458,7 +500,6 @@
 
         resetModalForm();
 
-        // Close modal
         const modalEl = document.querySelector("#modal-list-visitor");
         const modal = bootstrap.Modal.getInstance(modalEl);
         modal?.hide();
@@ -480,7 +521,6 @@
         return;
       }
 
-      // Collect form data
       const formData = new FormData(mainForm);
       const data = {
         users: AppState.transactionUsers,
@@ -493,14 +533,14 @@
       // submitToBackend(data);
 
       Swal.fire("Success", "Appointment created successfully", "success").then(() => {
-        // Reset everything
         AppState.clear();
         mainForm.reset();
         loadTableUserList();
       });
     });
   }
-  // Content
+
+  // CONTENT
   function createAppointmentContent() {
     const page = document.createElement("div");
     page.innerHTML = `
@@ -588,27 +628,7 @@
           <div class="modal-body">
             <form action="" id="form-modal">
               <div class="user-card-list">
-                <div class="card user-card mb-3">
-                  <div class="mb-4">
-                    <label class="form-label"> Name </label>
-                      <select name="userName[]" class="form-select user-name">
-                        <option value="">Select</option>
-                        <option value="fuji">Fuji</option>
-                      </select>
-                  </div>
-                  <div class="mb-4">
-                    <label class="form-label"> Identity Number </label>
-
-                    <select name="identityNumber[]" class="form-select identity-number">
-                      <option value="">Select</option>
-                      <option value="123123">123123</option>
-                    </select>
-                  </div>
-                  <div class="mb-4">
-                    <label class="form-label"> Electronic Device </label>
-                    <div class="device-list">${createDeviceItem()}</div>
-                  </div>
-                </div>
+                <!-- main card is injected on init via resetModalForm(), not hardcoded here -->
               </div>
               <button type="button" class="btn btn-outline-secondary btn-modal-clone" id="btn-clone-add-user">
                 Add more user
@@ -627,12 +647,13 @@
     </div>
   `;
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const formModal = page.querySelector("#form-modal");
       const mainForm = page.querySelector("#main-transaction-form");
 
       setupFormEventHandlers(formModal);
       setupMainFormHandler(mainForm);
+      await resetModalForm(); // builds the initial (non-removable) user card
       loadTableUserList();
     }, 0);
 

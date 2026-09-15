@@ -54,19 +54,58 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;  
+  /* z-index: 10;   */
   transition: color 0.2s ease, background-color 0.2s ease;
   border-radius: 10px;         
 }
 .card.user-card .btn-remove-clone:hover {
   transform: scale(1.25);     
 }
+.form-group {
+    display: flex;
+}
 .table-card h3 {
     font-size: 1rem;
+}
+.table-card button {
+    justify-content: flex-end;
 }
 #visit-plan {
     display: flex;
 }
 .btn-table-edit, .btn-table-delete {
     border-radius: 10%;
+}
+#visit-plan input[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 16px;
+    padding: 5px;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+#visit-plan input[type="date"]:hover {
+     border-color: #94a3b8;
+}
+#visit-plan input[type="date"]:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+#visit-plan input[type="date"]::before {
+    content: attr(placeholder);
+    color: #94a3b8;
+    width: 100%;
+    margin-right: 0.5em;
+}
+#visit-plan input[type="date"]:focus::before,
+#visit-plan input[type="date"]:valid::before {
+    display: none;
+    content: "";
 }

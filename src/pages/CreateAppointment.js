@@ -14,6 +14,9 @@ const AppState = {
   dtInstance: null,
   transactionUsers: [],
   currentEditId: null,
+  visitorsCache: [],
+  choicesInstances: [],
+  airDatepickerInstance: [],
 
   addUser(userData) {
     this.transactionUsers.push({
@@ -39,7 +42,74 @@ const AppState = {
     this.transactionUsers = [];
     this.currentEditId = null;
   },
+  destroyAllChoicesInstances() {
+    this.choicesInstances.forEach((instance) => {
+      if (instance && typeof instance.destroy === "function") {
+        try {
+          instance.destroy();
+        } catch (e) {
+          console.error("Error destroying Choices instance:", e);
+        }
+      }
+    });
+    this.choicesInstances = [];
+  },
 };
+
+// VISITOR CACHE (fetch once, reuse for every card build — this is what lets
+// buildUserCard() below stay synchronous instead of returning a Promise)
+// async function getVisitorsCache() {
+//   if (AppState.visitorsCache.length === 0) {
+//     const { visitors = [] } = await fetchVisitors();
+//     AppState.visitorsCache = visitors;
+//   }
+//   return AppState.visitorsCache;
+// }
+async function fetchVisitorsData() {
+  if (AppState.visitorsCache.length > 0) {
+    return AppState.visitorsCache;
+  }
+
+  try {
+    const { visitors = [] } = await fetchVisitors();
+    AppState.visitorsCache = visitors;
+    return visitors;
+  } catch (e) {
+    console.error("Error fetching visitors:", e);
+    return [];
+  }
+}
+function initializeChoicesForSelect(selectElement, visitors) {
+  if (!selectElement) return null;
+
+  try {
+    const instance = new Choices(selectElement, {
+      searchEnabled: true,
+      searchPlaceholderValue: "Search by name",
+      itemSelectText: "",
+      placeholder: true,
+      placeholderValue: "Select",
+      shouldSort: false,
+      noResultsText: "Not found",
+      noChoicesText: "No choices",
+    });
+
+    instance.setChoices(
+      visitors.map((v) => ({ value: v.visitor_id, label: v.name })),
+      "value",
+      "label",
+      false,
+    );
+
+    selectElement.choicesInstance = instance;
+    AppState.choicesInstances.push(instance);
+
+    return instance;
+  } catch (e) {
+    console.error("Error initializing Choices:", e);
+    return null;
+  }
+}
 
 // DEVICE MANAGEMENT
 function createDeviceItem() {
@@ -71,7 +141,9 @@ function addDevice(userCard) {
   deviceItem.innerHTML = `
     <select name="electronicDevice[]" class="form-select electronic-device">
       <option value="">Select</option>
+      <option value="laptop">Laptop</option>
       <option value="handphone">Handphone</option>
+      <option value="camera">Camera</option>
     </select>
 
     <button type="button" class="btn btn-add btn-more-device" data-action="add-device">
@@ -114,63 +186,123 @@ function updateDeviceButtons(userCard) {
 }
 
 // USER CARD MANAGEMENT
-async function createUserCard() {
-  try {
-    const { visitors = [] } = await fetchVisitors();
-    if (dtInstance) {
-      dtInstance.destroy();
-      dtInstance = null;
+// Synchronous now — it just builds DOM from data that's already been fetched
+// (see getVisitorsCache). isClone controls whether the "remove" button shows:
+// the original/main card can't be deleted, only cloned cards can.
+function buildUserCard(visitors, isClone = false) {
+  const userCard = document.createElement("div");
+  userCard.className = "card user-card mb-3 clone-form-group";
+
+  const nameOptions = visitors.map((v) => `<option value="${v.name}">${v.name}</option>`).join("");
+  const idOptions = visitors.map((v) => `<option value="${v.identity_number}">${v.identity_number}</option>`).join("");
+
+  userCard.innerHTML = `
+    ${
+      isClone
+        ? `
+      <button type="button" class="btn btn-remove-clone" data-action="remove-user">
+        <i class="bi bi-trash"></i>
+      </button>
+    `
+        : ""
     }
-    const userCard = document.createElement("div");
-    userCard.className = "card user-card mb-3 clone-form-group";
-    
-    userCard.innerHTML = `
-        ${ visitors.length === 0 ? 
-          `
-          <div class="card" aria-hidden="true">
-            <div class="card-body">
-              <p class="card-text placeholder-glow">
-                <span class="placeholder col-7"></span>
-              </p>
-            </div>
-          </div>
-          ` : visitors.map((v,i) => `
-            <button type="button" class="btn btn-remove-clone" data-action="remove-user">
-              <i class="bi bi-trash"></i>
-            </button>
 
-            <div class="mb-4">
-              <label class="form-label">Name</label>
-              <select name="userName[]" class="form-select user-name">
-                <option value="">Select</option>
-                <option value="${}">Fuji</option>
-              </select>
-            </div>
+    <div class="mb-4">
+      <label class="form-label">Name</label>
+      <select name="userName[]" class="form-select user-name">
+        <option value="">Select</option>
+        ${nameOptions || `<option value="" disabled>No data</option>`}
+      </select>
+    </div>
 
-            <div class="mb-4">
-              <label class="form-label">Identity Number</label>
-              <select name="identityNumber[]" class="form-select identity-number">
-                <option value="">Select</option>
-                <option value="123123">123123</option>
-              </select>
-            </div>
+    <div class="mb-4">
+      <label class="form-label">Identity Number</label>
+      <select name="identityNumber[]" class="form-select identity-number">
+        <option value="">Select</option>
+        ${idOptions || `<option value="" disabled>No data</option>`}
+      </select>
+    </div>
 
-            <div class="mb-4">
-              <label class="form-label">Electronic Device</label>
-              <div class="device-list">
-                ${createDeviceItem()}
-              </div>
-            </div>
-          `)
-        }
-      
-    `;
-  return userCard;
+    <div class="mb-4">
+      <label class="form-label">Electronic Device</label>
+      <div class="device-list">${createDeviceItem()}</div>
+    </div>
+  `;
 
+  const nameSelect = userCard.querySelector(".user-name");
+  const idSelect = userCard.querySelector(".identity-number");
+
+  if (nameSelect) {
+    initializeChoicesForSelect(nameSelect, visitors);
   }
-  
+  if (idSelect) {
+    initializeChoicesForSelect(idSelect, visitors);
+  }
 
+  attachAutoFillListener(userCard, visitors);
+  return userCard;
 }
+
+function attachAutoFillListener(userCard, visitors) {
+  const nameSelect = userCard.querySelector(".user-name");
+  const idSelect = userCard.querySelector(".identity-number");
+
+  if (!nameSelect || !idSelect) return;
+
+  if (nameSelect.dataset.listenerAttached) return;
+  nameSelect.dataset.listenerAttached = "true";
+
+  nameSelect.addEventListener("change", () => {
+    const selectedName = nameSelect.value;
+
+    if (!selectedName) {
+      idSelect.value = "";
+      if (idSelect.choicesInstance) {
+        idSelect.choicesInstance.setChoiceByValue("");
+      }
+      return;
+    }
+
+    // Cari visitor berdasarkan nama
+    const visitor = visitors.find((v) => v.name === selectedName);
+
+    if (visitor) {
+      // Set identity number value
+      idSelect.value = visitor.identity_number;
+
+      // Update Choices instance
+      if (idSelect.choicesInstance) {
+        idSelect.choicesInstance.setChoiceByValue(visitor.identity_number);
+      }
+    }
+  });
+
+  idSelect.addEventListener("change", () => {
+    const selectedId = idSelect.value;
+
+    if (!selectedId) {
+      nameSelect.value = "";
+      if (nameSelect.choicesInstance) {
+        nameSelect.choicesInstance.setChoiceByValue("");
+      }
+      return;
+    }
+
+    // Cari visitor berdasarkan identity number
+    const visitor = visitors.find((v) => v.identity_number === selectedId);
+
+    if (visitor) {
+      // Set name value
+      nameSelect.value = visitor.name;
+
+      // Update Choices instance
+      if (nameSelect.choicesInstance) {
+        nameSelect.choicesInstance.setChoiceByValue(visitor.name);
+      }
+    }
+  });
+}
+
 function removeUser(userCard) {
   const userList = userCard.closest(".user-card-list");
   if (!userList) return;
@@ -193,14 +325,13 @@ function updateModalScroll() {
   const userCards = modalBody.querySelectorAll(".user-card");
   modalBody.classList.toggle("has-overflow", userCards.length > 1);
 }
-function addMoreUserToModal() {
+async function addMoreUserToModal() {
   const modalEl = document.querySelector("#modal-list-visitor");
   const userCardList = modalEl?.querySelector(".user-card-list");
-
   if (!userCardList) return;
 
-  const cloneUser = createUserCard();
-  userCardList.appendChild(cloneUser);
+  const visitors = await fetchVisitorsData();
+  userCardList.appendChild(buildUserCard(visitors, true)); // clone → has remove button
   updateModalScroll();
 }
 function getModalFormData() {
@@ -214,7 +345,6 @@ function getModalFormData() {
     const userName = card.querySelector(".user-name").value;
     const identityNumber = card.querySelector(".identity-number").value;
 
-    // FIX: Query selector yang benar untuk electronic device
     const devices = Array.from(card.querySelectorAll(".electronic-device"))
       .map((select) => select.value)
       .filter((val) => val.trim() !== "");
@@ -230,7 +360,7 @@ function getModalFormData() {
 
   return tempUsersData;
 }
-function resetModalForm() {
+async function resetModalForm() {
   const modalEl = document.querySelector("#modal-list-visitor");
   if (!modalEl) return;
 
@@ -238,7 +368,13 @@ function resetModalForm() {
   const userCardList = modalEl.querySelector(".user-card-list");
 
   if (form) form.reset();
-  if (userCardList) userCardList.innerHTML = createUserCard();
+
+  if (userCardList) {
+    AppState.destroyAllChoicesInstances();
+    userCardList.innerHTML = "";
+    const visitors = await fetchVisitorsData();
+    userCardList.appendChild(buildUserCard(visitors, false));
+  }
 
   updateModalScroll();
 }
@@ -248,13 +384,11 @@ async function loadTableUserList() {
   const wrapper = document.querySelector(".visitor-list-table-wrapper");
   if (!wrapper) return;
 
-  // Clear existing instance
   if (AppState.dtInstance) {
     AppState.dtInstance.destroy();
     AppState.dtInstance = null;
   }
 
-  // If no users
   if (AppState.transactionUsers.length === 0) {
     wrapper.innerHTML = `
       <div class="text-center py-4 text-muted">
@@ -265,12 +399,9 @@ async function loadTableUserList() {
     return;
   }
 
-  // Build single table with all users
   const rows = AppState.transactionUsers
     .map((group, index) => {
-      // const userSummary = group.users.map((u) => `${u.userName || "No Name"} (${u.devices.join(", ")})`).join(" | ");
       const deviceDisplay = group.users.map((u) => `${u.devices.join(", ")}`).join(" | ");
-
       const userName = group.users.map((u) => u.userName).join(" | ");
       const identityNumber = group.users.map((u) => u.identityNumber).join(" | ");
 
@@ -323,7 +454,6 @@ async function loadTableUserList() {
     },
   });
 
-  // Attach event listeners
   attachTableEventListeners();
 }
 function attachTableEventListeners() {
@@ -336,47 +466,39 @@ function attachTableEventListeners() {
 
     if (editBtn) {
       e.preventDefault();
-      const id = editBtn.dataset.editId;
-      editUserData(id);
+      editUserData(editBtn.dataset.editId);
     }
 
     if (deleteBtn) {
       e.preventDefault();
-      const id = deleteBtn.dataset.deleteId;
-      deleteUserData(id);
+      deleteUserData(deleteBtn.dataset.deleteId);
     }
   });
 }
 
 // EDIT & DELETE OPERATIONS
-function editUserData(id) {
+async function editUserData(id) {
   const userData = AppState.getUser(id);
   if (!userData) return;
 
   AppState.currentEditId = id;
 
-  // Populate modal dengan data yang ada
   const modalEl = document.querySelector("#modal-list-visitor");
   const userCardList = modalEl?.querySelector(".user-card-list");
-
   if (!userCardList) return;
 
-  // Clear existing cards
   userCardList.innerHTML = "";
+  const visitors = await fetchVisitorsData();
 
-  // Populate dengan data yang ada
-  userData.users.forEach((user) => {
-    const userCard = createUserCard();
+  userData.users.forEach((user, index) => {
+    const userCard = buildUserCard(visitors, index !== 0);
     userCardList.appendChild(userCard);
 
-    // Set values
     const nameSelect = userCard.querySelector(".user-name");
     const idSelect = userCard.querySelector(".identity-number");
-
     if (nameSelect) nameSelect.value = user.userName;
     if (idSelect) idSelect.value = user.identityNumber;
 
-    // Set devices
     const deviceList = userCard.querySelector(".device-list");
     deviceList.innerHTML = "";
 
@@ -386,8 +508,9 @@ function editUserData(id) {
       deviceItem.innerHTML = `
         <select name="electronicDevice[]" class="form-select electronic-device">
           <option value="">Select</option>
+          <option value="laptop">Laptop</option>
           <option value="handphone">Handphone</option>
-          <option value="${device}" selected>${device}</option>
+          <option value="camera">Camera</option>
         </select>
 
         <button type="button" class="btn btn-add btn-more-device" data-action="add-device">
@@ -399,6 +522,9 @@ function editUserData(id) {
         </button>
       `;
       deviceList.appendChild(deviceItem);
+
+      const select = deviceItem.querySelector(".electronic-device");
+      if (select) select.value = device;
     });
 
     updateDeviceButtons(userCard);
@@ -406,7 +532,6 @@ function editUserData(id) {
 
   updateModalScroll();
 
-  // Show modal
   const modal = new bootstrap.Modal(modalEl);
   modal.show();
 }
@@ -433,7 +558,6 @@ function deleteUserData(id) {
 function setupFormEventHandlers(formModal) {
   if (!formModal) return;
 
-  // Add User Button (Add more user dalam modal)
   const btnClone = formModal.querySelector("#btn-clone-add-user");
   if (btnClone) {
     btnClone.addEventListener("click", (e) => {
@@ -442,7 +566,6 @@ function setupFormEventHandlers(formModal) {
     });
   }
 
-  // Device dan User management dalam modal
   formModal.addEventListener("click", (event) => {
     const actionButton = event.target.closest("[data-action]");
     if (!actionButton) return;
@@ -467,7 +590,6 @@ function setupFormEventHandlers(formModal) {
     }
   });
 
-  // Form Submit (Save button pada modal footer)
   const submitBtn = document.querySelector("#add-user");
   if (submitBtn) {
     submitBtn.addEventListener("click", (e) => {
@@ -491,7 +613,6 @@ function setupFormEventHandlers(formModal) {
 
       resetModalForm();
 
-      // Close modal
       const modalEl = document.querySelector("#modal-list-visitor");
       const modal = bootstrap.Modal.getInstance(modalEl);
       modal?.hide();
@@ -499,6 +620,32 @@ function setupFormEventHandlers(formModal) {
       loadTableUserList();
     });
   }
+}
+
+// MAIN FORM CONFIGURATION
+function visitPlanDate() {
+  const startDate = document.querySelector("#start-date");
+  const endDate = document.querySelector("#end-date");
+
+  if (!startDate || !endDate) return;
+
+  const endDatePicker = new AirDatepicker(endDate, {
+    locale: localeEn,
+    autoClose: true,
+  });
+
+  new AirDatepicker(startDate, {
+    locale: localeEn,
+    autoClose: true,
+    onSelect({ date }) {
+      if (date) {
+        endDatePicker.update({
+          minDate: date,
+        });
+        endDatePicker.show();
+      }
+    },
+  });
 }
 
 // MAIN FORM SUBMISSION
@@ -513,7 +660,6 @@ function setupMainFormHandler(mainForm) {
       return;
     }
 
-    // Collect form data
     const formData = new FormData(mainForm);
     const data = {
       users: AppState.transactionUsers,
@@ -526,14 +672,14 @@ function setupMainFormHandler(mainForm) {
     // submitToBackend(data);
 
     Swal.fire("Success", "Appointment created successfully", "success").then(() => {
-      // Reset everything
       AppState.clear();
       mainForm.reset();
       loadTableUserList();
     });
   });
 }
-// Content
+
+// CONTENT
 function createAppointmentContent() {
   const page = document.createElement("div");
   page.innerHTML = `
@@ -555,57 +701,65 @@ function createAppointmentContent() {
       </div>
 
       <div class="table-card mb-4 p-4">
-        <h3 class="text-dark section-title fw-semibold">Detail Appointment</h3>
+        <h3 class="text-dark section-title fw-semibold mb-4">Detail Appointment</h3>
 
-        <div class="mb-3">
-          <label for="visit-plan" class="form-label"> Visit Plan </label>
-          <div id="visit-plan">
-            <input type="date" class="form-control" id="start-date" name="startDate" />
-            <i class="bi bi-calendar-date"></i>
-            <input type="date" class="form-control" id="end-date" name="endDate" />
-            <i class="bi bi-calendar-date"></i>
+        <div class="row">
+          <div class="mb-3 form-group">
+            <div class="col-2">
+              <label for="visit-plan" class="form-label"> Visit Plan </label>
+            </div>
+            <div class="col-10 d-flex gap-2">
+                <div>
+                  <input type="input" class="form-control" id="start-date" name="startDate" placeholder="Start Date" />
+                  <i class="bi bi-calendar-date"></i>
+                </div>
+                <div>
+                  <input type="input" class="form-control" id="end-date" name="endDate" placeholder="Enda Date" />
+                  <i class="bi bi-calendar-date"></i>
+                </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="company-origin" class="form-label"> Company Origin</label>
+            <select name="companyOrigin" id="company-origin" class="form-select">
+              <option value="">Select</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="purpose" class="form-label"> Purpose</label>
+            <select name="purpose_" id="purpose" class="form-select">
+              <option value="">Select</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="vehicle-type" class="form-label">Vehicle Type</label>
+            <select name="vehicleType" id="vehicle-type" class="form-select">
+              <option value="">Select</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="license-plate" class="form-label"> License Plate</label>
+            <input type="text" class="form-control" name="licensePlate" id="license-plate" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="employee-target" class="form-label"> Employee Target </label>
+            <select name="employeeTarget" id="employee-target" class="form-select">
+              <option value="">Select</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="target-department" class="form-label"> Target Department </label>
+            <input type="text" class="form-control" id="target-department" name="targetDepartment" />
           </div>
         </div>
 
-        <div class="mb-3">
-          <label for="company-origin" class="form-label"> Company Origin</label>
-          <select name="companyOrigin" id="company-origin" class="form-select">
-            <option value="">Select</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label for="purpose" class="form-label"> Purpose</label>
-          <select name="purpose_" id="purpose" class="form-select">
-            <option value="">Select</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label for="vehicle-type" class="form-label">Vehicle Type</label>
-          <select name="vehicleType" id="vehicle-type" class="form-select">
-            <option value="">Select</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label for="license-plate" class="form-label"> License Plate</label>
-          <input type="text" class="form-control" name="licensePlate" id="license-plate" required />
-        </div>
-
-        <div class="mb-3">
-          <label for="employee-target" class="form-label"> Employee Target </label>
-          <select name="employeeTarget" id="employee-target" class="form-select">
-            <option value="">Select</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label for="target-department" class="form-label"> Target Department </label>
-          <input type="text" class="form-control" id="target-department" name="targetDepartment" />
-        </div>
-
-        <button type="submit" class="btn btn-primary" id="create-submit">Submit</button>
+        <button type="submit" class="btn btn-primary justify-end" id="create-submit">Submit</button>
       </div>
     </form>
 
@@ -621,27 +775,7 @@ function createAppointmentContent() {
           <div class="modal-body">
             <form action="" id="form-modal">
               <div class="user-card-list">
-                <div class="card user-card mb-3">
-                  <div class="mb-4">
-                    <label class="form-label"> Name </label>
-                      <select name="userName[]" class="form-select user-name">
-                        <option value="">Select</option>
-                        <option value="fuji">Fuji</option>
-                      </select>
-                  </div>
-                  <div class="mb-4">
-                    <label class="form-label"> Identity Number </label>
-
-                    <select name="identityNumber[]" class="form-select identity-number">
-                      <option value="">Select</option>
-                      <option value="123123">123123</option>
-                    </select>
-                  </div>
-                  <div class="mb-4">
-                    <label class="form-label"> Electronic Device </label>
-                    <div class="device-list">${createDeviceItem()}</div>
-                  </div>
-                </div>
+                <!-- main card is injected on init via resetModalForm(), not hardcoded here -->
               </div>
               <button type="button" class="btn btn-outline-secondary btn-modal-clone" id="btn-clone-add-user">
                 Add more user
@@ -660,12 +794,14 @@ function createAppointmentContent() {
     </div>
   `;
 
-  setTimeout(() => {
+  setTimeout(async () => {
     const formModal = page.querySelector("#form-modal");
     const mainForm = page.querySelector("#main-transaction-form");
 
     setupFormEventHandlers(formModal);
     setupMainFormHandler(mainForm);
+    visitPlanDate();
+    await resetModalForm();
     loadTableUserList();
   }, 0);
 
