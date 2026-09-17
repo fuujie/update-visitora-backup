@@ -1,4 +1,4 @@
-import { LoginPage } from "../pages/LoginPage.js";
+import { LoginPage } from "../pages/loginPage.js";
 import { DashboardPage } from "../pages/DashboardPage.js";
 import { RegistVisitorPage } from "../pages/RegistVisitorPage.js";
 import { CompanyPage } from "../pages/CompanyPage.js";

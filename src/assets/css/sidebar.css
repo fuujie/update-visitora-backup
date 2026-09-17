@@ -21,6 +21,10 @@
     position: relative;
 }
 
+.sidebar-brand {
+    z-index: 999;
+}
+
 /* 2. Biarkan menu mengambil sisa ruang yang ada */
 .sidebar-menu {
     flex: 1; 

@@ -2,6 +2,14 @@
     .section-title {
         font-size: 1rem !important;
     }
+    .form-group{
+        display: block !important;
+    }
+    .form-group .col-2,
+    .form-group .col-10{
+        width: 100% !important;
+    }
+    
 }
 .modal-header {
     background-color: var(--secondary-disabled);
@@ -54,7 +62,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* z-index: 10;   */
   transition: color 0.2s ease, background-color 0.2s ease;
   border-radius: 10px;         
 }
@@ -108,4 +115,16 @@
 #visit-plan input[type="date"]:valid::before {
     display: none;
     content: "";
+}
+.start-date, .end-date {
+  position: relative;
+  flex: 1;
+}
+.bi-calendar-date {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d; 
+  pointer-events: none;
 }

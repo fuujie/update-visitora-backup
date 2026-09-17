@@ -9,14 +9,18 @@ import "air-datepicker/air-datepicker.css";
 import "../assets/css/create-appointment.css";
 import "../assets/css/styles.css";
 import { fetchVisitors } from "../services/visitor-list";
+import { fetchItemBring } from "../services/item-bring";
 
 const AppState = {
   dtInstance: null,
   transactionUsers: [],
   currentEditId: null,
   visitorsCache: [],
+  bringItemCache: [],
   choicesInstances: [],
   airDatepickerInstance: [],
+  isResettingModal: false,
+  modalInstance: null,
 
   addUser(userData) {
     this.transactionUsers.push({
@@ -42,6 +46,7 @@ const AppState = {
     this.transactionUsers = [];
     this.currentEditId = null;
   },
+
   destroyAllChoicesInstances() {
     this.choicesInstances.forEach((instance) => {
       if (instance && typeof instance.destroy === "function") {
@@ -52,23 +57,13 @@ const AppState = {
         }
       }
     });
+
     this.choicesInstances = [];
   },
 };
 
-// VISITOR CACHE (fetch once, reuse for every card build — this is what lets
-// buildUserCard() below stay synchronous instead of returning a Promise)
-// async function getVisitorsCache() {
-//   if (AppState.visitorsCache.length === 0) {
-//     const { visitors = [] } = await fetchVisitors();
-//     AppState.visitorsCache = visitors;
-//   }
-//   return AppState.visitorsCache;
-// }
 async function fetchVisitorsData() {
-  if (AppState.visitorsCache.length > 0) {
-    return AppState.visitorsCache;
-  }
+  if (AppState.visitorsCache.length > 0) return AppState.visitorsCache;
 
   try {
     const { visitors = [] } = await fetchVisitors();
@@ -79,7 +74,42 @@ async function fetchVisitorsData() {
     return [];
   }
 }
-function initializeChoicesForSelect(selectElement, visitors) {
+
+async function fetchItemData() {
+  if (AppState.bringItemCache.length > 0) return AppState.bringItemCache;
+
+  try {
+    const { items = [] } = await fetchItemBring();
+    AppState.bringItemCache = items;
+    return items;
+  } catch (e) {
+    console.error("Error fetching item bawaan categories:", e);
+    return [];
+  }
+}
+
+async function fetchModalReferenceData() {
+  const [visitors, bringItemCategories] = await Promise.all([fetchVisitorsData(), fetchItemData()]);
+
+  return { visitors, bringItemCategories };
+}
+
+function setSelectValue(selectElement, value) {
+  if (!selectElement) return;
+
+  const normalizedValue = value == null ? "" : String(value);
+
+  const choicesInstance = selectElement.choicesInstance;
+
+  if (choicesInstance && typeof choicesInstance.setChoiceByValue === "function") {
+    choicesInstance.setChoiceByValue(normalizedValue);
+    return;
+  }
+
+  selectElement.value = normalizedValue;
+}
+
+function initializeChoicesForSelect(selectElement, choicesData) {
   if (!selectElement) return null;
 
   try {
@@ -95,7 +125,10 @@ function initializeChoicesForSelect(selectElement, visitors) {
     });
 
     instance.setChoices(
-      visitors.map((v) => ({ value: v.visitor_id, label: v.name })),
+      choicesData.map((item) => ({
+        value: String(item.value),
+        label: String(item.label),
+      })),
       "value",
       "label",
       false,
@@ -132,6 +165,7 @@ function createDeviceItem() {
     </div>
   `;
 }
+
 function addDevice(userCard) {
   const deviceList = userCard.querySelector(".device-list");
   if (!deviceList) return;
@@ -158,6 +192,7 @@ function addDevice(userCard) {
   deviceList.appendChild(deviceItem);
   updateDeviceButtons(userCard);
 }
+
 function removeDevice(deviceItem) {
   const userCard = deviceItem.closest(".user-card");
   if (!userCard) return;
@@ -171,6 +206,7 @@ function removeDevice(deviceItem) {
   deviceItem.remove();
   updateDeviceButtons(userCard);
 }
+
 function updateDeviceButtons(userCard) {
   const deviceItems = userCard.querySelectorAll(".device-item");
 
@@ -185,15 +221,91 @@ function updateDeviceButtons(userCard) {
   });
 }
 
-// USER CARD MANAGEMENT
-// Synchronous now — it just builds DOM from data that's already been fetched
-// (see getVisitorsCache). isClone controls whether the "remove" button shows:
-// the original/main card can't be deleted, only cloned cards can.
-function buildUserCard(visitors, isClone = false) {
+// ITEM BAWAAN
+function createItemBawaanOptions(categories) {
+  return categories.map((c) => `<option value="${c.name}">${c.name}</option>`).join("");
+}
+
+function createItemBawaanItem(categories) {
+  return `
+    <div class="item-bawaan-item d-flex align-items-center gap-2 mb-2">
+      <select name="itemBawaan[]" class="form-select item-bawaan">
+        <option value="">Select</option>
+        ${createItemBawaanOptions(categories) || `<option value="" disabled>No data</option>`}
+      </select>
+
+      <button type="button" class="btn btn-add btn-more-item-bawaan" data-action="add-item-bawaan">
+        <i class="bi bi-plus-circle"></i>
+      </button>
+
+      <button type="button" class="btn btn-remove-item-bawaan d-none" data-action="remove-item-bawaan">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  `;
+}
+
+function addItemBawaan(userCard) {
+  const itemBawaanList = userCard.querySelector(".item-bawaan-list");
+  if (!itemBawaanList) return;
+
+  const categories = AppState.bringItemCache;
+
+  const itemBawaanEl = document.createElement("div");
+  itemBawaanEl.className = "item-bawaan-item d-flex align-items-center gap-2 mb-2";
+  itemBawaanEl.innerHTML = `
+    <select name="itemBawaan[]" class="form-select item-bawaan">
+      <option value="">Select</option>
+      ${createItemBawaanOptions(categories)}
+    </select>
+
+    <button type="button" class="btn btn-add btn-more-item-bawaan" data-action="add-item-bawaan">
+      <i class="bi bi-plus-circle"></i>
+    </button>
+
+    <button type="button" class="btn btn-remove-item-bawaan" data-action="remove-item-bawaan">
+      <i class="bi bi-trash"></i>
+    </button>
+  `;
+
+  itemBawaanList.appendChild(itemBawaanEl);
+  updateItemBawaanButtons(userCard);
+}
+
+function removeItemBawaan(itemBawaanItem) {
+  const userCard = itemBawaanItem.closest(".user-card");
+  if (!userCard) return;
+
+  const itemBawaanList = userCard.querySelector(".item-bawaan-list");
+  if (!itemBawaanList) return;
+
+  const items = itemBawaanList.querySelectorAll(".item-bawaan-item");
+  if (items.length <= 1) return;
+
+  itemBawaanItem.remove();
+  updateItemBawaanButtons(userCard);
+}
+
+function updateItemBawaanButtons(userCard) {
+  const items = userCard.querySelectorAll(".item-bawaan-item");
+
+  items.forEach((item, index) => {
+    const removeButton = item.querySelector('[data-action="remove-item-bawaan"]');
+    const addButton = item.querySelector('[data-action="add-item-bawaan"]');
+
+    if (!removeButton || !addButton) return;
+
+    addButton.classList.toggle("d-none", index !== items.length - 1);
+    removeButton.classList.toggle("d-none", items.length <= 1);
+  });
+}
+
+function buildUserCard(visitors, bringItemCategories, isClone = false) {
   const userCard = document.createElement("div");
   userCard.className = "card user-card mb-3 clone-form-group";
 
   const nameOptions = visitors.map((v) => `<option value="${v.name}">${v.name}</option>`).join("");
+
   const idOptions = visitors.map((v) => `<option value="${v.identity_number}">${v.identity_number}</option>`).join("");
 
   userCard.innerHTML = `
@@ -227,16 +339,28 @@ function buildUserCard(visitors, isClone = false) {
       <label class="form-label">Electronic Device</label>
       <div class="device-list">${createDeviceItem()}</div>
     </div>
+
+    <div class="mb-4">
+      <label class="form-label">Items Bring</label>
+      <div class="item-bawaan-list">${createItemBawaanItem(bringItemCategories)}</div>
+    </div>
   `;
 
   const nameSelect = userCard.querySelector(".user-name");
   const idSelect = userCard.querySelector(".identity-number");
 
   if (nameSelect) {
-    initializeChoicesForSelect(nameSelect, visitors);
+    initializeChoicesForSelect(
+      nameSelect,
+      visitors.map((v) => ({ value: v.name, label: v.name })),
+    );
   }
+
   if (idSelect) {
-    initializeChoicesForSelect(idSelect, visitors);
+    initializeChoicesForSelect(
+      idSelect,
+      visitors.map((v) => ({ value: v.identity_number, label: v.identity_number })),
+    );
   }
 
   attachAutoFillListener(userCard, visitors);
@@ -249,31 +373,21 @@ function attachAutoFillListener(userCard, visitors) {
 
   if (!nameSelect || !idSelect) return;
 
-  if (nameSelect.dataset.listenerAttached) return;
+  if (nameSelect.dataset.listenerAttached === "true") return;
   nameSelect.dataset.listenerAttached = "true";
 
   nameSelect.addEventListener("change", () => {
     const selectedName = nameSelect.value;
 
     if (!selectedName) {
-      idSelect.value = "";
-      if (idSelect.choicesInstance) {
-        idSelect.choicesInstance.setChoiceByValue("");
-      }
+      setSelectValue(idSelect, "");
       return;
     }
 
-    // Cari visitor berdasarkan nama
     const visitor = visitors.find((v) => v.name === selectedName);
 
     if (visitor) {
-      // Set identity number value
-      idSelect.value = visitor.identity_number;
-
-      // Update Choices instance
-      if (idSelect.choicesInstance) {
-        idSelect.choicesInstance.setChoiceByValue(visitor.identity_number);
-      }
+      setSelectValue(idSelect, visitor.identity_number);
     }
   });
 
@@ -281,24 +395,14 @@ function attachAutoFillListener(userCard, visitors) {
     const selectedId = idSelect.value;
 
     if (!selectedId) {
-      nameSelect.value = "";
-      if (nameSelect.choicesInstance) {
-        nameSelect.choicesInstance.setChoiceByValue("");
-      }
+      setSelectValue(nameSelect, "");
       return;
     }
 
-    // Cari visitor berdasarkan identity number
     const visitor = visitors.find((v) => v.identity_number === selectedId);
 
     if (visitor) {
-      // Set name value
-      nameSelect.value = visitor.name;
-
-      // Update Choices instance
-      if (nameSelect.choicesInstance) {
-        nameSelect.choicesInstance.setChoiceByValue(visitor.name);
-      }
+      setSelectValue(nameSelect, visitor.name);
     }
   });
 }
@@ -315,6 +419,28 @@ function removeUser(userCard) {
 }
 
 // MODAL MANAGEMENT
+function getUserModalInstance() {
+  const modalEl = document.querySelector("#modal-list-visitor");
+  if (!modalEl) return null;
+
+  if (!AppState.modalInstance) {
+    AppState.modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+  }
+
+  return AppState.modalInstance;
+}
+
+function closeUserModal() {
+  const modalInstance = getUserModalInstance();
+  modalInstance?.hide();
+
+  document.body.classList.remove("modal-open");
+  document.body.style.removeProperty("padding-right");
+  document.body.style.removeProperty("overflow");
+
+  document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+}
+
 function updateModalScroll() {
   const modalEl = document.querySelector("#modal-list-visitor");
   if (!modalEl) return;
@@ -325,15 +451,17 @@ function updateModalScroll() {
   const userCards = modalBody.querySelectorAll(".user-card");
   modalBody.classList.toggle("has-overflow", userCards.length > 1);
 }
+
 async function addMoreUserToModal() {
   const modalEl = document.querySelector("#modal-list-visitor");
   const userCardList = modalEl?.querySelector(".user-card-list");
   if (!userCardList) return;
 
-  const visitors = await fetchVisitorsData();
-  userCardList.appendChild(buildUserCard(visitors, true)); // clone → has remove button
+  const { visitors, bringItemCategories } = await fetchModalReferenceData();
+  userCardList.appendChild(buildUserCard(visitors, bringItemCategories, true));
   updateModalScroll();
 }
+
 function getModalFormData() {
   const modalEl = document.querySelector("#modal-list-visitor");
   if (!modalEl) return [];
@@ -342,45 +470,117 @@ function getModalFormData() {
   const tempUsersData = [];
 
   cards.forEach((card) => {
-    const userName = card.querySelector(".user-name").value;
-    const identityNumber = card.querySelector(".identity-number").value;
+    const userName = card.querySelector(".user-name")?.value?.trim() || "";
+    const identityNumber = card.querySelector(".identity-number")?.value?.trim() || "";
 
     const devices = Array.from(card.querySelectorAll(".electronic-device"))
       .map((select) => select.value)
-      .filter((val) => val.trim() !== "");
+      .filter((val) => val && val.trim() !== "");
+
+    const itemsBawaan = Array.from(card.querySelectorAll(".item-bawaan"))
+      .map((select) => select.value)
+      .filter((val) => val && val.trim() !== "");
 
     if (userName || identityNumber) {
       tempUsersData.push({
         userName,
         identityNumber,
         devices,
+        itemsBawaan,
       });
     }
   });
 
   return tempUsersData;
 }
+
+let isResettingModal = false;
+
 async function resetModalForm() {
+  if (isResettingModal) return;
+
   const modalEl = document.querySelector("#modal-list-visitor");
-  if (!modalEl) return;
+  const form = modalEl?.querySelector("#form-modal");
+  const userCardList = modalEl?.querySelector(".user-card-list");
 
-  const form = modalEl.querySelector("#form-modal");
-  const userCardList = modalEl.querySelector(".user-card-list");
+  if (!modalEl || !userCardList) return;
 
-  if (form) form.reset();
+  try {
+    isResettingModal = true;
 
-  if (userCardList) {
+    form?.reset();
+
     AppState.destroyAllChoicesInstances();
-    userCardList.innerHTML = "";
-    const visitors = await fetchVisitorsData();
-    userCardList.appendChild(buildUserCard(visitors, false));
-  }
+    userCardList.replaceChildren();
 
-  updateModalScroll();
+    const { visitors, bringItemCategories } = await fetchModalReferenceData();
+
+    userCardList.appendChild(buildUserCard(visitors, bringItemCategories, false));
+
+    updateModalScroll();
+  } catch (error) {
+    console.error("Gagal mereset modal:", error);
+  } finally {
+    isResettingModal = false;
+  }
 }
 
 // TABLE MANAGEMENT
-async function loadTableUserList() {
+function buildTableRows() {
+  const rowsHtml = [];
+  let rowNumber = 0;
+
+  AppState.transactionUsers.forEach((group) => {
+    group.users.forEach((user) => {
+      rowNumber += 1;
+
+      const devices = (user.devices || []).filter(Boolean).join(", ") || "-";
+      const itemsBawaan = (user.itemsBawaan || []).filter(Boolean).join(", ") || "-";
+
+      rowsHtml.push(`
+        <tr>
+          <td>${rowNumber}</td>
+          <td>${user.userName || "-"}</td>
+          <td>${user.identityNumber || "-"}</td>
+          <td>${devices}</td>
+          <td>${itemsBawaan}</td>
+          <td>
+            <button type="button" class="btn btn-sm btn-table-edit btn-info" data-edit-id="${group.id}">
+              <i class="bi bi-pencil"></i>
+            </button>
+          </td>
+        </tr>
+      `);
+    });
+  });
+
+  return rowsHtml.join("");
+}
+
+function attachTableEventListeners() {
+  const wrapper = document.querySelector(".visitor-list-table-wrapper");
+  if (!wrapper) return;
+
+  if (wrapper.dataset.listenerAttached === "true") return;
+  wrapper.dataset.listenerAttached = "true";
+
+  wrapper.addEventListener("click", (e) => {
+    const editBtn = e.target.closest("[data-edit-id]");
+    const deleteBtn = e.target.closest("[data-delete-id]");
+
+    if (editBtn) {
+      e.preventDefault();
+      editUserData(editBtn.dataset.editId);
+    }
+
+    if (deleteBtn) {
+      e.preventDefault();
+      deleteUserData(deleteBtn.dataset.deleteId);
+    }
+  });
+}
+
+function loadTableUserList() {
   const wrapper = document.querySelector(".visitor-list-table-wrapper");
   if (!wrapper) return;
 
@@ -399,31 +599,6 @@ async function loadTableUserList() {
     return;
   }
 
-  const rows = AppState.transactionUsers
-    .map((group, index) => {
-      const deviceDisplay = group.users.map((u) => `${u.devices.join(", ")}`).join(" | ");
-      const userName = group.users.map((u) => u.userName).join(" | ");
-      const identityNumber = group.users.map((u) => u.identityNumber).join(" | ");
-
-      return `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${userName || "-"}</td>
-          <td>${identityNumber || "-"}</td>
-          <td>${deviceDisplay || "-"}</td>
-          <td>
-            <button type="button" class="btn btn-sm btn-table-edit btn-info" data-edit-id="${group.id}" data-bs-toggle="modal" data-bs-target="#modal-list-visitor">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button type="button" class="btn btn-sm btn-table-delete btn-warning" data-delete-id="${group.id}">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
-
   wrapper.innerHTML = `
     <table id="tempUser-table" class="table table-hover mb-0">
       <thead>
@@ -432,11 +607,12 @@ async function loadTableUserList() {
           <th>Name</th>
           <th>Identity Number</th>
           <th>Electronic Device</th>
+          <th>Items Bring</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody>
-        ${rows}
+        ${buildTableRows()}
       </tbody>
     </table>
   `;
@@ -456,27 +632,8 @@ async function loadTableUserList() {
 
   attachTableEventListeners();
 }
-function attachTableEventListeners() {
-  const wrapper = document.querySelector(".visitor-list-table-wrapper");
-  if (!wrapper) return;
 
-  wrapper.addEventListener("click", (e) => {
-    const editBtn = e.target.closest("[data-edit-id]");
-    const deleteBtn = e.target.closest("[data-delete-id]");
-
-    if (editBtn) {
-      e.preventDefault();
-      editUserData(editBtn.dataset.editId);
-    }
-
-    if (deleteBtn) {
-      e.preventDefault();
-      deleteUserData(deleteBtn.dataset.deleteId);
-    }
-  });
-}
-
-// EDIT & DELETE OPERATIONS
+// EDIT & DELETE
 async function editUserData(id) {
   const userData = AppState.getUser(id);
   if (!userData) return;
@@ -485,55 +642,98 @@ async function editUserData(id) {
 
   const modalEl = document.querySelector("#modal-list-visitor");
   const userCardList = modalEl?.querySelector(".user-card-list");
-  if (!userCardList) return;
+  if (!modalEl || !userCardList) return;
 
-  userCardList.innerHTML = "";
-  const visitors = await fetchVisitorsData();
+  AppState.destroyAllChoicesInstances();
+  userCardList.replaceChildren();
+
+  const { visitors, bringItemCategories } = await fetchModalReferenceData();
 
   userData.users.forEach((user, index) => {
-    const userCard = buildUserCard(visitors, index !== 0);
+    const userCard = buildUserCard(visitors, bringItemCategories, index !== 0);
+
     userCardList.appendChild(userCard);
 
     const nameSelect = userCard.querySelector(".user-name");
     const idSelect = userCard.querySelector(".identity-number");
-    if (nameSelect) nameSelect.value = user.userName;
-    if (idSelect) idSelect.value = user.identityNumber;
+
+    console.log("Edit data user:", user);
+
+    setSelectValue(nameSelect, user.userName);
+    setSelectValue(idSelect, user.identityNumber);
 
     const deviceList = userCard.querySelector(".device-list");
-    deviceList.innerHTML = "";
+    if (deviceList) {
+      deviceList.replaceChildren();
 
-    user.devices.forEach((device, idx) => {
-      const deviceItem = document.createElement("div");
-      deviceItem.className = "device-item d-flex align-items-center gap-2 mb-2";
-      deviceItem.innerHTML = `
-        <select name="electronicDevice[]" class="form-select electronic-device">
-          <option value="">Select</option>
-          <option value="laptop">Laptop</option>
-          <option value="handphone">Handphone</option>
-          <option value="camera">Camera</option>
-        </select>
+      const devices = user.devices && user.devices.length > 0 ? user.devices : [""];
 
-        <button type="button" class="btn btn-add btn-more-device" data-action="add-device">
-          <i class="bi bi-plus-circle"></i>
-        </button>
+      devices.forEach((device, idx) => {
+        const deviceItem = document.createElement("div");
+        deviceItem.className = "device-item d-flex align-items-center gap-2 mb-2";
+        deviceItem.innerHTML = `
+          <select name="electronicDevice[]" class="form-select electronic-device">
+            <option value="">Select</option>
+            <option value="laptop">Laptop</option>
+            <option value="handphone">Handphone</option>
+            <option value="camera">Camera</option>
+          </select>
 
-        <button type="button" class="btn btn-remove-device ${idx === 0 ? "d-none" : ""}" data-action="remove-device">
-          <i class="bi bi-trash"></i>
-        </button>
-      `;
-      deviceList.appendChild(deviceItem);
+          <button type="button" class="btn btn-add btn-more-device" data-action="add-device">
+            <i class="bi bi-plus-circle"></i>
+          </button>
 
-      const select = deviceItem.querySelector(".electronic-device");
-      if (select) select.value = device;
-    });
+          <button type="button" class="btn btn-remove-device ${idx === 0 ? "d-none" : ""}" data-action="remove-device">
+            <i class="bi bi-trash"></i>
+          </button>
+        `;
 
-    updateDeviceButtons(userCard);
+        deviceList.appendChild(deviceItem);
+
+        const select = deviceItem.querySelector(".electronic-device");
+        if (select) select.value = device || "";
+      });
+
+      updateDeviceButtons(userCard);
+    }
+
+    const itemBawaanList = userCard.querySelector(".item-bawaan-list");
+    if (itemBawaanList) {
+      itemBawaanList.replaceChildren();
+
+      const items = user.itemsBawaan && user.itemsBawaan.length > 0 ? user.itemsBawaan : [""];
+
+      items.forEach((itemValue, idx) => {
+        const itemBawaanEl = document.createElement("div");
+        itemBawaanEl.className = "item-bawaan-item d-flex align-items-center gap-2 mb-2";
+        itemBawaanEl.innerHTML = `
+          <select name="itemBawaan[]" class="form-select item-bawaan">
+            <option value="">Select</option>
+            ${createItemBawaanOptions(bringItemCategories)}
+          </select>
+
+          <button type="button" class="btn btn-add btn-more-item-bawaan" data-action="add-item-bawaan">
+            <i class="bi bi-plus-circle"></i>
+          </button>
+
+          <button type="button" class="btn btn-remove-item-bawaan ${idx === 0 ? "d-none" : ""}" data-action="remove-item-bawaan">
+            <i class="bi bi-trash"></i>
+          </button>
+        `;
+
+        itemBawaanList.appendChild(itemBawaanEl);
+
+        const select = itemBawaanEl.querySelector(".item-bawaan");
+        if (select) select.value = itemValue || "";
+      });
+
+      updateItemBawaanButtons(userCard);
+    }
   });
 
   updateModalScroll();
-
-  const modal = new bootstrap.Modal(modalEl);
-  modal.show();
+  const modalInstance = getUserModalInstance();
+  modalInstance?.show();
 }
 
 function deleteUserData(id) {
@@ -559,39 +759,56 @@ function setupFormEventHandlers(formModal) {
   if (!formModal) return;
 
   const btnClone = formModal.querySelector("#btn-clone-add-user");
-  if (btnClone) {
+  if (btnClone && btnClone.dataset.bound !== "true") {
+    btnClone.dataset.bound = "true";
     btnClone.addEventListener("click", (e) => {
       e.preventDefault();
       addMoreUserToModal();
     });
   }
 
-  formModal.addEventListener("click", (event) => {
-    const actionButton = event.target.closest("[data-action]");
-    if (!actionButton) return;
+  if (formModal.dataset.bound !== "true") {
+    formModal.dataset.bound = "true";
 
-    const action = actionButton.dataset.action;
-    const userCard = actionButton.closest(".user-card");
+    formModal.addEventListener("click", (event) => {
+      const actionButton = event.target.closest("[data-action]");
+      if (!actionButton) return;
 
-    if (action === "add-device") {
-      event.preventDefault();
-      if (userCard) addDevice(userCard);
-    }
+      const action = actionButton.dataset.action;
+      const userCard = actionButton.closest(".user-card");
 
-    if (action === "remove-device") {
-      event.preventDefault();
-      const deviceItem = actionButton.closest(".device-item");
-      if (deviceItem) removeDevice(deviceItem);
-    }
+      if (action === "add-device") {
+        event.preventDefault();
+        if (userCard) addDevice(userCard);
+      }
 
-    if (action === "remove-user") {
-      event.preventDefault();
-      if (userCard) removeUser(userCard);
-    }
-  });
+      if (action === "remove-device") {
+        event.preventDefault();
+        const deviceItem = actionButton.closest(".device-item");
+        if (deviceItem) removeDevice(deviceItem);
+      }
+
+      if (action === "add-item-bawaan") {
+        event.preventDefault();
+        if (userCard) addItemBawaan(userCard);
+      }
+
+      if (action === "remove-item-bawaan") {
+        event.preventDefault();
+        const itemBawaanItem = actionButton.closest(".item-bawaan-item");
+        if (itemBawaanItem) removeItemBawaan(itemBawaanItem);
+      }
+
+      if (action === "remove-user") {
+        event.preventDefault();
+        if (userCard) removeUser(userCard);
+      }
+    });
+  }
 
   const submitBtn = document.querySelector("#add-user");
-  if (submitBtn) {
+  if (submitBtn && submitBtn.dataset.bound !== "true") {
+    submitBtn.dataset.bound = "true";
     submitBtn.addEventListener("click", (e) => {
       e.preventDefault();
 
@@ -613,9 +830,8 @@ function setupFormEventHandlers(formModal) {
 
       resetModalForm();
 
-      const modalEl = document.querySelector("#modal-list-visitor");
-      const modal = bootstrap.Modal.getInstance(modalEl);
-      modal?.hide();
+      const modalInstance = getUserModalInstance();
+      modalInstance?.hide();
 
       loadTableUserList();
     });
@@ -648,9 +864,35 @@ function visitPlanDate() {
   });
 }
 
-// MAIN FORM SUBMISSION
+function buildAppointmentPayloads(mainForm) {
+  const formData = new FormData(mainForm);
+  const appointmentFields = Object.fromEntries(formData);
+
+  return AppState.transactionUsers.flatMap((group) =>
+    group.users.map((user) => ({
+      username: user.userName,
+      identity_number: user.identityNumber,
+      electronic_device: user.devices,
+      items_bawaan: user.itemsBawaan,
+      company_origin: appointmentFields.companyOrigin,
+      purpose: appointmentFields.purpose_,
+      vehicle_type: appointmentFields.vehicleType,
+      license_plate: appointmentFields.licensePlate,
+      employee_target: appointmentFields.employeeTarget,
+      target_department: appointmentFields.targetDepartment,
+      visit_plan: {
+        start_date: appointmentFields.startDate,
+        end_date: appointmentFields.endDate,
+      },
+    })),
+  );
+}
+
 function setupMainFormHandler(mainForm) {
   if (!mainForm) return;
+
+  if (mainForm.dataset.bound === "true") return;
+  mainForm.dataset.bound = "true";
 
   mainForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -660,16 +902,8 @@ function setupMainFormHandler(mainForm) {
       return;
     }
 
-    const formData = new FormData(mainForm);
-    const data = {
-      users: AppState.transactionUsers,
-      appointment: Object.fromEntries(formData),
-    };
-
-    console.log("Form submitted with data:", data);
-
-    // TODO: Send to backend
-    // submitToBackend(data);
+    const payloads = buildAppointmentPayloads(mainForm);
+    console.log("Payloads to send (1 request per user):", payloads);
 
     Swal.fire("Success", "Appointment created successfully", "success").then(() => {
       AppState.clear();
@@ -688,9 +922,7 @@ function createAppointmentContent() {
         <h1 class="text-primary mb-3">Create Visit Schedule</h1>
       </div>
       <div class="d-flex gap-2">
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-list-visitor">
-          <i class="bi bi-plus-lg me-1"></i>Add User
-        </button>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-list-visitor"><i class="bi bi-plus-lg me-1"></i>Add User</button>
       </div>
     </div>
 
@@ -706,64 +938,88 @@ function createAppointmentContent() {
         <div class="row">
           <div class="mb-3 form-group">
             <div class="col-2">
-              <label for="visit-plan" class="form-label"> Visit Plan </label>
+              <label for="visit-plan" class="form-label">Visit Plan</label>
             </div>
             <div class="col-10 d-flex gap-2">
-                <div>
-                  <input type="input" class="form-control" id="start-date" name="startDate" placeholder="Start Date" />
-                  <i class="bi bi-calendar-date"></i>
-                </div>
-                <div>
-                  <input type="input" class="form-control" id="end-date" name="endDate" placeholder="Enda Date" />
-                  <i class="bi bi-calendar-date"></i>
-                </div>
+              <div class="start-date">
+                <input type="input" class="form-control" id="start-date" name="startDate" placeholder="Start Date" />
+                <i class="bi bi-calendar-date"></i>
+              </div>
+              <div class="end-date">
+                <input type="input" class="form-control" id="end-date" name="endDate" placeholder="End Date" />
+                <i class="bi bi-calendar-date"></i>
+              </div>
             </div>
           </div>
 
-          <div class="mb-3">
-            <label for="company-origin" class="form-label"> Company Origin</label>
-            <select name="companyOrigin" id="company-origin" class="form-select">
-              <option value="">Select</option>
-            </select>
+          <div class="mb-3 form-group">
+            <div class="col-2">
+              <label for="company-origin" class="form-label">Company Origin</label>
+            </div>
+            <div class="col-10">
+              <select name="companyOrigin" id="company-origin" class="form-select">
+                <option value="">Select</option>
+              </select>
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label for="purpose" class="form-label"> Purpose</label>
-            <select name="purpose_" id="purpose" class="form-select">
-              <option value="">Select</option>
-            </select>
+          <div class="mb-3 form-group">
+            <div class="col-2">
+              <label for="purpose" class="form-label">Purpose</label>
+            </div>
+            <div class="col-10">
+              <select name="purpose_" id="purpose" class="form-select">
+                <option value="">Select</option>
+              </select>
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label for="vehicle-type" class="form-label">Vehicle Type</label>
-            <select name="vehicleType" id="vehicle-type" class="form-select">
-              <option value="">Select</option>
-            </select>
+          <div class="mb-3 form-group">
+            <div class="col-2">
+              <label for="vehicle-type" class="form-label">Vehicle Type</label>
+            </div>
+            <div class="col-10">
+              <select name="vehicleType" id="vehicle-type" class="form-select">
+                <option value="">Select</option>
+              </select>
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label for="license-plate" class="form-label"> License Plate</label>
-            <input type="text" class="form-control" name="licensePlate" id="license-plate" required />
+          <div class="mb-3 form-group">
+            <div class="col-2">
+              <label for="license-plate" class="form-label">License Plate</label>
+            </div>
+            <div class="col-10">
+              <input type="text" class="form-control" name="licensePlate" id="license-plate" required />
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label for="employee-target" class="form-label"> Employee Target </label>
-            <select name="employeeTarget" id="employee-target" class="form-select">
-              <option value="">Select</option>
-            </select>
+          <div class="mb-3 form-group">
+            <div class="col-2">
+              <label for="employee-target" class="form-label">Employee Target</label>
+            </div>
+            <div class="col-10">
+              <select name="employeeTarget" id="employee-target" class="form-select">
+                <option value="">Select</option>
+              </select>
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label for="target-department" class="form-label"> Target Department </label>
-            <input type="text" class="form-control" id="target-department" name="targetDepartment" />
+          <div class="mb-3 form-group">
+            <div class="col-2">
+              <label for="target-department" class="form-label">Department Target</label>
+            </div>
+            <div class="col-10">
+              <input type="text" class="form-control" id="target-department" name="targetDepartment" readonly />
+            </div>
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary justify-end" id="create-submit">Submit</button>
+        <button type="submit" class="btn btn-primary" id="create-submit">Submit</button>
       </div>
     </form>
 
-    <!-- Modal list user -->
+    <!-- MODAL ADD USER -->
     <div class="modal fade" id="modal-list-visitor" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
@@ -774,12 +1030,8 @@ function createAppointmentContent() {
 
           <div class="modal-body">
             <form action="" id="form-modal">
-              <div class="user-card-list">
-                <!-- main card is injected on init via resetModalForm(), not hardcoded here -->
-              </div>
-              <button type="button" class="btn btn-outline-secondary btn-modal-clone" id="btn-clone-add-user">
-                Add more user
-              </button>
+              <div class="user-card-list"></div>
+              <button type="button" class="btn btn-outline-secondary btn-modal-clone" id="btn-clone-add-user">Add more user</button>
             </form>
           </div>
 
@@ -801,6 +1053,18 @@ function createAppointmentContent() {
     setupFormEventHandlers(formModal);
     setupMainFormHandler(mainForm);
     visitPlanDate();
+
+    const modalEl = page.querySelector("#modal-list-visitor");
+    if (modalEl && modalEl.dataset.boundCleanup !== "true") {
+      modalEl.dataset.boundCleanup = "true";
+      modalEl.addEventListener("hidden.bs.modal", () => {
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("padding-right");
+        document.body.style.removeProperty("overflow");
+        document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      });
+    }
+
     await resetModalForm();
     loadTableUserList();
   }, 0);
