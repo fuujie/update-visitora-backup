@@ -28,3 +28,4 @@ Thumbs.db
 
 #services
 src/services/auth.js
+src/coba.html
