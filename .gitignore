@@ -25,3 +25,6 @@ Thumbs.db
 
 # Optional
 *.swp
+
+#services
+src/services/auth.js
