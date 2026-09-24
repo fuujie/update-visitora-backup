@@ -8,7 +8,6 @@ const dummyItemBawaanCategories = [
 ];
 
 export async function fetchItemBring() {
-  // simulasi network delay biar behavior async-nya realistis
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({ items: dummyItemBawaanCategories });

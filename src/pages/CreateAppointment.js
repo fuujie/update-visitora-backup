@@ -2,7 +2,7 @@ import Swal from "sweetalert2";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import Choices from "choices.js";
 import AirDatepicker from "air-datepicker";
-import localeEn from "air-datepicker/locale/en";
+import localeEnModule from "air-datepicker/locale/en";
 import { DataTable } from "simple-datatables";
 import "choices.js/public/assets/styles/choices.min.css";
 import "air-datepicker/air-datepicker.css";
@@ -21,6 +21,7 @@ const AppState = {
   airDatepickerInstance: [],
   isResettingModal: false,
   modalInstance: null,
+  userCompany: [],
 
   addUser(userData) {
     this.transactionUsers.push({
@@ -61,6 +62,12 @@ const AppState = {
     this.choicesInstances = [];
   },
 };
+
+// async function fetchVisitorByCompany() {
+//   const userData = localStorage.getItem(user);
+//   console.log("user", userData);
+
+// }
 
 async function fetchVisitorsData() {
   if (AppState.visitorsCache.length > 0) return AppState.visitorsCache;
@@ -839,29 +846,44 @@ function setupFormEventHandlers(formModal) {
 }
 
 // MAIN FORM CONFIGURATION
+const localeEn = localeEnModule.default || localeEnModule;
+
 function visitPlanDate() {
   const startDate = document.querySelector("#start-date");
   const endDate = document.querySelector("#end-date");
 
   if (!startDate || !endDate) return;
 
-  const endDatePicker = new AirDatepicker(endDate, {
-    locale: localeEn,
-    autoClose: true,
-  });
+  const today = new Date();
 
-  new AirDatepicker(startDate, {
+  const datepickerOptions = {
     locale: localeEn,
     autoClose: true,
+    dateFormat: "dd/MM/yyyy",
+    minDate: today,
+  };
+  console.log(localeEn);
+
+  const endDatePicker = new AirDatepicker(endDate, datepickerOptions);
+
+  const startDatePicker = new AirDatepicker(startDate, {
+    ...datepickerOptions,
+
     onSelect({ date }) {
       if (date) {
         endDatePicker.update({
           minDate: date,
         });
+
         endDatePicker.show();
       }
     },
   });
+
+  return {
+    startDatePicker,
+    endDatePicker,
+  };
 }
 
 function buildAppointmentPayloads(mainForm) {
@@ -943,11 +965,11 @@ function createAppointmentContent() {
             <div class="col-10 d-flex gap-2">
               <div class="start-date">
                 <input type="input" class="form-control" id="start-date" name="startDate" placeholder="Start Date" />
-                <i class="bi bi-calendar-date"></i>
+                <i class="bi bi-calendar-event"></i>
               </div>
               <div class="end-date">
                 <input type="input" class="form-control" id="end-date" name="endDate" placeholder="End Date" />
-                <i class="bi bi-calendar-date"></i>
+                <i class="bi bi-calendar-event"></i>
               </div>
             </div>
           </div>
@@ -1014,9 +1036,10 @@ function createAppointmentContent() {
             </div>
           </div>
         </div>
-
-        <button type="submit" class="btn btn-primary" id="create-submit">Submit</button>
-      </div>
+        <div class="d-flex justify-content-end mt-4">
+          <button type="submit" class="btn btn-primary rounded-5" id="create-submit">Submit</button>
+        </div>
+    </div>
     </form>
 
     <!-- MODAL ADD USER -->

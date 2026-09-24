@@ -1,0 +1,211 @@
+.report-range-title {
+    font-size: 1rem;
+}
+.calendar-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #6c757d;
+}
+/* Container table */
+#main-table {
+  width: 100%;
+  overflow-x: auto;
+  padding: 0.25rem;
+}
+
+/* Table wrapper dari DataTable */
+#main-table .dataTable-wrapper {
+  width: 100%;
+}
+
+/* Table */
+#report-table {
+  width: 100% !important;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  /* border-radius: 10px; */
+  overflow: hidden;
+  font-size: 0.5rem;
+}
+.datatable-container table {
+    table-layout: auto !important;
+}
+/* Table header */
+#report-table thead th {
+  padding: 0.9rem 1rem;
+  /* color: #ffffff;
+  background-color: #2563eb; */
+  border: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Header radius */
+#report-table thead th:first-child {
+  border-top-left-radius: 10px;
+}
+
+#report-table thead th:last-child {
+  border-top-right-radius: 10px;
+}
+
+/* Table body */
+#report-table tbody td {
+  padding: 0.85rem 1rem;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Hilangkan border baris terakhir */
+#report-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Hover row */
+#report-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+#report-table tbody tr:hover {
+  background-color: #eff6ff;
+}
+
+/* Kolom nomor */
+#report-table th:first-child,
+#report-table td:first-child {
+  width: 55px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Kolom status */
+#report-table th:nth-child(11),
+#report-table td:nth-child(11) {
+  text-align: center;
+}
+
+/* Kolom detail */
+#report-table th:last-child,
+#report-table td:last-child {
+  min-width: 110px;
+  text-align: center;
+}
+
+/* Action button wrapper */
+#report-table .action-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+
+/* Search dan pagination DataTable */
+.dataTable-top,
+.dataTable-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dataTable-bottom {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+/* Select jumlah data */
+.dataTable-selector {
+  min-width: 70px;
+  padding: 0.45rem 0.6rem;
+  color: #374151;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+}
+
+/* Pagination */
+.dataTable-pagination ul {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dataTable-pagination a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  color: #374151;
+  text-decoration: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.dataTable-pagination a:hover {
+  color: #2563eb;
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+.dataTable-pagination .active a {
+  color: #ffffff;
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+/* Text informasi jumlah data */
+.dataTable-info {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #main-table {
+    padding: 0;
+  }
+
+  #report-table {
+    min-width: 1000px;
+    font-size: 0.8rem;
+  }
+
+  #report-table thead th,
+  #report-table tbody td {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .dataTable-top,
+  .dataTable-bottom {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dataTable-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dataTable-pagination {
+    align-self: flex-end;
+  }
+}

@@ -120,7 +120,7 @@
   position: relative;
   flex: 1;
 }
-.bi-calendar-date {
+.bi-calendar-event {
   position: absolute;
   right: 0.75rem;
   top: 50%;

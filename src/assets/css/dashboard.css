@@ -12,6 +12,7 @@
 /* ── Wrapper utama ── */
 .dashboard-wrapper {
   min-height: 100vh;
+  /* background: linear-gradient(var(--primary-disabled) 50%, var(--secondary-disabled)50%) */
   background-color: var(--background);
 }
 

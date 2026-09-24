@@ -1,0 +1,466 @@
+.visitor-image .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-around;
+}
+.visitor-image .card-1,
+.visitor-image .card-2,
+.visitor-image .card-3 {
+    display: flex;
+    /* justify-content: center !important; */
+    flex-direction: column;
+    padding: 10px 0;
+    gap: 5px;
+    width: 30%;
+    height: auto;
+    min-height: 250px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+    border-radius: 10px;
+}
+@media (max-width: 576px) {
+    .visitor-image .card-1,
+    .visitor-image .card-2,
+    .visitor-image .card-3 {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+}
+.visitor-image .img-title {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--secondary-hover);
+    margin-bottom: 5px;
+}
+.visitor-image img {
+    border: 2px solid var(--secondary-disabled);
+    border-radius: 5px;
+    display: block;
+    object-fit: cover;
+    align-self: center;
+    width: 200px;
+    height: 200px;
+    margin-bottom: 10px;
+}
+.visitor-image .card-1 button {
+    width: 50%;
+    display: block;
+    align-self: center;
+}
+
+/* Card utama */
+.details {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.details form {
+    width: 100%;
+}
+
+/* Jarak antar kolom */
+.details .row {
+    --bs-gutter-x: 2rem;
+    --bs-gutter-y: 1rem;
+}
+
+/* Form group menjadi horizontal */
+.details .form-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Label di sebelah kiri */
+.details .form-label {
+    flex: 0 0 145px;
+    margin: 0;
+    color: #374151;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Input dan select mengisi sisa ruang */
+.details .form-control,
+.details .form-select,
+.details select {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #d7dee8;
+    border-radius: 10px;
+    background-color: #fff;
+    color: #1f2937;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.details .form-control:focus,
+.details .form-select:focus,
+.details select:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.13);
+}
+
+.details .form-control::placeholder {
+    color: #9ca3af;
+}
+
+/* Form group Visitor Type */
+.details .visitor-type {
+    align-items: flex-start;
+}
+
+.details .visitor-type .form-label {
+    padding-top: 0.65rem;
+}
+
+.visitor-type-options {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-height: 44px;
+}
+
+.visitor-type .form-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.visitor-type .form-check:hover {
+    border-color: #a5b4fc;
+    background-color: #eef2ff;
+}
+
+.visitor-type .form-check-input {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #4f46e5;
+}
+
+.visitor-type .form-check-label {
+    margin: 0;
+    color: #374151;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+/* Bagian electronic device */
+.device-block .form-group {
+    align-items: center;
+}
+
+.device-block .form-select {
+    flex: 1;
+}
+
+.btn-add {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #4f46e5;
+    background: #eef2ff;
+    font-size: 1.1rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-add:hover {
+    color: #fff;
+    background: #4f46e5;
+}
+
+/* Tombol submit */
+#checkinSubmit {
+    display: block;
+    margin: 1rem 0 0 auto;
+    min-width: 120px;
+    padding: 0.7rem 1.5rem;
+    font-weight: 600;
+    border: none;
+    box-shadow: 0 6px 14px rgba(13, 110, 253, 0.2);
+}
+
+@media (max-width: 768px) {
+    .details {
+        padding: 1.25rem !important;
+    }
+
+    .details .form-group {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+    }
+
+    .details .form-label {
+        flex: none;
+        width: 100%;
+        padding: 0 !important;
+    }
+
+    .details .form-control,
+    .details .form-select,
+    .details select {
+        width: 100%;
+    }
+
+    .details .visitor-type {
+        align-items: stretch;
+    }
+
+    .visitor-type-options {
+        align-items: stretch;
+        /* flex-direction: column; */
+        gap: 0.5rem;
+    }
+
+    .visitor-type .form-check {
+        width: 100%;
+    }
+
+    .device-block .form-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .device-block .form-group .form-label {
+        flex: 0 0 100%;
+    }
+
+    .device-block .form-select {
+        flex: 1;
+    }
+
+    #checkinSubmit {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Device block */
+.device-block {
+    width: 100%;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.09);
+    padding: 15px 15px 5px 15px;
+    border-radius: 10px;
+}
+
+/* Wrapper select device dan tombol tambah */
+.device-input {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.device-input .form-select {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Tombol tambah device */
+.device-input .btn-add {
+    flex: 0 0 44px;
+}
+
+/* Protection type */
+.protection-type-group {
+    align-items: center;
+}
+
+.protection-options {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    flex: 1;
+    min-height: 44px;
+}
+
+/* Radio option */
+.protection-options .form-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 42px;
+    margin: 0;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.protection-options .form-check:hover {
+    border-color: #a5b4fc;
+    background-color: #eef2ff;
+}
+
+.protection-options .form-check-input {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #4f46e5;
+}
+
+.protection-options .form-check-label {
+    margin: 0;
+    color: #374151;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+/* Protection number */
+.protection-number {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+}
+
+.protection-number .form-select {
+    width: 100%;
+    min-width: 0;
+}
+.device-input .btn-add,
+.device-input .btn-delete {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+}
+
+.device-input .btn-add {
+    color: #4f46e5;
+    background: #eef2ff;
+}
+
+.device-input .btn-add:hover {
+    color: #fff;
+    background: #4f46e5;
+}
+
+.device-input .btn-delete {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.device-input .btn-delete:hover {
+    color: #fff;
+    background: #dc2626;
+}
+#deviceList {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.modal-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.modal-header i {
+    font-size: 25px;
+}
+.modal-title {
+    font-size: 1rem;
+}
+.camera-container {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    margin: auto;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 10px;
+}
+#cameraView {
+    width: 100%;
+    height: 100%;
+    max-height: 500px;
+    background-color: var(--primary-disabled);
+    border-radius: 10px;
+    object-fit: cover;
+    display: block;
+}
+#camera-status {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 120px;
+    padding: 20px;
+    text-align: center;
+}
+
+#camera-status .spinner-border {
+    display: block;
+    width: 2rem;
+    height: 2rem;
+    margin: 0 auto;
+}
+
+#camera-status .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+#cameraCanvas {
+    display: none;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+}
+#retake-btn {
+    display: none;
+}
+#save-photo-btn {
+    display: none;
+}
+.btn-scan i {
+    font-size: 1rem;
+    font-weight: 600;
+}

@@ -21,16 +21,6 @@
 }
 
 /* ─── search input ──────────────────────────────────────────────── */
-/* .datatable-search input {
-  padding: 5px;
-  margin: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: var(--font-weight-medium);
-  color: var(--foreground);
-} */
  .datatable-search {
   flex-grow: 1;
   display: flex;
@@ -56,13 +46,13 @@
 
 @media (max-width: 480px) {
   .datatable-top {
-    flex-direction: column; /* Ubah tumpukan jadi vertikal di HP sangat kecil */
+    flex-direction: column; 
     align-items: flex-start;
   }
   
   .datatable-search,
   .datatable-search input {
-    width: 100%; /* Search bar jadi penuh di layar HP */
+    width: 100%;
     max-width: 100%;
   }
 }

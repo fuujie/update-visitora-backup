@@ -1,0 +1,53 @@
+[
+  {
+    "name": "Aang Aang",
+    "phone_number": "085966100215",
+    "email": "psales14@://sanfang.com",
+    "company_": "PT SAN FANG INDONESIA",
+    "check_in_plan": "2026-09-18",
+    "check_out_plan": "2026-09-23",
+    "check_in_actual": "23/09/2026, 09:47",
+    "check_out_actual": "23/09/2026, 00:00",
+    "appointment_id": "VST2026092380578B",
+    "id_card_number": "10-002",
+    "parking_card_number": "",
+    "device": "Headphone",
+    "sticker": "STG-18738",
+    "visitor_type": "non_export",
+    "status": "checkin"
+  },
+  {
+    "name": "MAS'ADI",
+    "phone_number": "081336322463",
+    "email": "psales20@://sanfang.com",
+    "company_": "PT SAN FANG INDONESIA",
+    "check_in_plan": "2026-09-23",
+    "check_out_plan": "2026-09-23",
+    "check_in_actual": "23/09/2026, 08:46",
+    "check_out_actual": "23/09/2026, 00:00",
+    "appointment_id": "VST2026092342350E",
+    "id_card_number": "JU-023",
+    "parking_card_number": "V-012",
+    "device": "Headphone",
+    "sticker": "STG-6004",
+    "visitor_type": "non_export",
+    "status": "checkin"
+  },
+  {
+    "name": "Febryan Guntur Arizal",
+    "phone_number": "082115687922",
+    "email": "businesskopi@gmail.com",
+    "company_": "PT HENGKONG PERKASA INDONESIA",
+    "check_in_plan": "2026-06-02",
+    "check_out_plan": "2026-12-31",
+    "check_in_actual": "23/09/2026, 09:45",
+    "check_out_actual": "31/12/2026, 00:00",
+    "appointment_id": "VST202604019CC6ED",
+    "id_card_number": "JM-050",
+    "parking_card_number": "V-005",
+    "device": "Headphone",
+    "sticker": "STG-18735",
+    "visitor_type": "non_export",
+    "status": "checkin"
+  }
+]

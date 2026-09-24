@@ -11,6 +11,8 @@ import { StickerBlockPage } from "../pages/StickerBlockPage.js";
 import { ProtectiveCasePage } from "../pages/ProtectiveCasePage.js";
 import { VisitorsPage } from "../pages/VisitorsPage.js";
 import { CreateAppointmentPage } from "../pages/CreateAppointment.js";
+import { DataCheckinPage } from "../pages/DataCheckinPage.js";
+import { CheckinPage } from "../pages/VisitorCheckinPage.js";
 
 // ─── Definisi routes ────────────────────────────────────────────
 const routes = {
@@ -27,10 +29,27 @@ const routes = {
   "/protective-case": ProtectiveCasePage,
   "/visitors": VisitorsPage,
   "/visiting-schedule": CreateAppointmentPage,
+  "/data-checkin": DataCheckinPage,
+  "/visitor-checkin": CheckinPage,
 };
 
 // ─── Auth guard ─────────────────────────────────────────────────
-const protectedRoutes = ["/dashboard", "/regist-visitor", "/company", "/department", "/users", "/host", "/visitor-card", "/parking-card", "/sticker-block", "/protective-case", "/visitors", "/visiting-schedule"];
+const protectedRoutes = [
+  "/dashboard",
+  "/regist-visitor",
+  "/company",
+  "/department",
+  "/users",
+  "/host",
+  "/visitor-card",
+  "/parking-card",
+  "/sticker-block",
+  "/protective-case",
+  "/visitors",
+  "/visiting-schedule",
+  "/data-checkin",
+  "/visitor-checkin",
+];
 
 function isAuthenticated() {
   return !!localStorage.getItem("token");
@@ -57,7 +76,11 @@ function render() {
   const app = document.getElementById("app");
 
   if (!Page) {
-    app.innerHTML = '<h2 style="padding:40px;text-align:center">404 - Halaman tidak ditemukan</h2>';
+    // app.innerHTML = '<h2 style="padding:40px;text-align:center">404 - Halaman tidak ditemukan</h2>';
+    app.innerHTML = `<div class="text-center text-primary d-flex gap-2" style="padding: 40px; text-align: center; font-size: 20px">
+      <i class="bi bi-magic"></i>
+      <p>belum jadi kak</p>
+    </div>`;
     return;
   }
 
