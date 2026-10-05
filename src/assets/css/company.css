@@ -9,3 +9,35 @@
     padding: 0.5rem 1rem;
     border-radius: var(--radius);
 }
+.gridjs-thead th {
+    background-color: var(--secondary-disabled) !important;
+    color: #000100 !important;
+}
+th.gridjs-th:first-child {
+    width: 10px !important;
+}
+.gridjs-search input {
+    border-radius: 10px;
+}
+@media (max-width: 425px) {
+    [data-column-id="no"] {
+    text-align: center;
+    }
+    [data-column-id="namaPerusahaan"] {
+    width: 10px;
+    }
+    .btn-edit, .btn-delete {
+        padding: 10px !important;
+        font-size: 10px !important;
+    }
+    .page-title button {
+        font-size: 10px;
+        padding: 6px;
+    }
+    .gridjs-search input{
+        font-size: 10px;
+        border-radius: 15px;
+    }
+    
+}
+

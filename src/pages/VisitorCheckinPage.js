@@ -275,7 +275,8 @@ function visitorCheckinContent() {
                 name="id-appointment"
                 placeholder="Scan for input"
               />
-          <button class="btn btn-scan btn-outline-primary rounded-4" id="scanQr"><i class="bi bi-qr-code-scan"></i></button>
+          <button class="btn btn-scan btn-outline-primary rounded-4" id="scanQr" data-bs-toggle="modal"
+            data-bs-target="#modalQrScan"><i class="bi bi-qr-code-scan"></i></button>
 
             </div>
 
@@ -618,7 +619,7 @@ function visitorCheckinContent() {
             <div class="modal-content">
             <div class="modal-header">
                 <i class="bi bi-camera"></i>
-                <h1 class="modal-title fs-5" id="staticBackdropLabel">Take Photo</h1>
+                <h1 class="modal-title fs-5">Take Photo</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -643,6 +644,22 @@ function visitorCheckinContent() {
             </div>
             </div>
         </div>
+    </div>
+    <!-- Modal scan qr-->
+    <div class="modal fade" id="modalQrScan" tabindex="-1" aria-labelledby="scanQrTitle" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="scanQrTitle">Scan Qr Code</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="qr-reader-container">
+              <div id="qrReader_"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `;
   initializeVisitorCheckinPage(page);

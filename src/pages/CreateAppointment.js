@@ -3,16 +3,17 @@ import { DashboardLayout } from "../layouts/DashboardLayout";
 import Choices from "choices.js";
 import AirDatepicker from "air-datepicker";
 import localeEnModule from "air-datepicker/locale/en";
-import { DataTable } from "simple-datatables";
 import "choices.js/public/assets/styles/choices.min.css";
 import "air-datepicker/air-datepicker.css";
 import "../assets/css/create-appointment.css";
 import "../assets/css/styles.css";
 import { fetchVisitors } from "../services/visitor-list";
 import { fetchItemBring } from "../services/item-bring";
+import { Grid } from "gridjs";
+import "gridjs/dist/theme/mermaid.css";
 
 const AppState = {
-  dtInstance: null,
+  gridInstance: null,
   transactionUsers: [],
   currentEditId: null,
   visitorsCache: [],
@@ -43,7 +44,7 @@ const AppState = {
   },
 
   clear() {
-    this.dtInstance = null;
+    this.gridInstance = null;
     this.transactionUsers = [];
     this.currentEditId = null;
   },
@@ -62,12 +63,6 @@ const AppState = {
     this.choicesInstances = [];
   },
 };
-
-// async function fetchVisitorByCompany() {
-//   const userData = localStorage.getItem(user);
-//   console.log("user", userData);
-
-// }
 
 async function fetchVisitorsData() {
   if (AppState.visitorsCache.length > 0) return AppState.visitorsCache;
@@ -591,9 +586,9 @@ function loadTableUserList() {
   const wrapper = document.querySelector(".visitor-list-table-wrapper");
   if (!wrapper) return;
 
-  if (AppState.dtInstance) {
-    AppState.dtInstance.destroy();
-    AppState.dtInstance = null;
+  if (AppState.gridInstance) {
+    AppState.gridInstance.destroy();
+    AppState.gridInstance = null;
   }
 
   if (AppState.transactionUsers.length === 0) {
@@ -622,20 +617,25 @@ function loadTableUserList() {
         ${buildTableRows()}
       </tbody>
     </table>
+    <div id="gridjs-container"></div>
   `;
+  const tableElement = wrapper.querySelector("#tempUser-table");
+  const gridContainer = wrapper.querySelector("#gridjs-container");
 
-  const tableEl = wrapper.querySelector("#tempUser-table");
-  AppState.dtInstance = new DataTable(tableEl, {
-    searchable: true,
-    fixedHeight: false,
-    perPageSelect: [10, 25, 50],
-    labels: {
-      placeholder: "Search...",
-      perPage: " ",
-      noRows: "Not found",
-      info: "Showing {start}-{end} from {rows} data",
+  gridInstance = new Grid({
+    from: tableElement,
+    search: true,
+    sort: true,
+    pagination: { limit: 10 },
+    language: {
+      search: { placeholder: "Search..." },
+      pagination: true,
+      noRecordsFound: "Loading...",
     },
-  });
+    className: {
+      table: "table table-hover mb-0",
+    },
+  }).render(gridContainer);
 
   attachTableEventListeners();
 }

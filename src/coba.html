@@ -1,172 +1,62 @@
 <div class="page-title d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
   <div>
-    <h1 class="text-primary mb-3">Visitor Check In</h1>
+    <h1 class="text-primary mb-3">Detail Information</h1>
+  </div>
+  <div>
+    <p class="text-dark fw-semibold">Download this QR for easier registration</p>
   </div>
 </div>
-<div class="card visitor-image mb-4 p-4">
-  <div class="row">
-    <div class="col-lg-4 col-md-4 col-sm-12 card-1">
-      <h5 class="img-title">Visitor Photo</h5>
-      <img src="images/pfp1.png" alt="" id="current_photo" />
-      <button class="btn btn-primary rounded-5" id="take_photo"><i class="bi bi-camera-fill"></i> Take Photo</button>
-    </div>
-    <div class="col-lg-4 col-md-4 col-sm-12 card-2">
-      <h5 class="img-title">Visitor Photo Profile</h5>
-      <img src="images/pfp2.png" alt="" id="photo_profile" />
-    </div>
-    <div class="col-lg-4 col-md-4 col-sm-12 card-3">
-      <h5 class="img-title">Identity Photo</h5>
-      <img src="images/ktp.png" alt="" id="identity_photo" />
-    </div>
+
+<div class="card p-4">
+  <div class="title-container">
+    <h5 class="page-title">Detail Appointment</h5>
+    <span class="qr-info"><i class="bi bi-info-circle"></i>Show this QR Code to Security personnel</span>
   </div>
-</div>
-<div class="card details mb-4 p-4 gap-2">
-  <form action="">
+  <div>
     <div class="row">
-      <div class="col-lg-6 col-md-6 col-sm-12">
-        <div class="form-group">
-          <label for="" class="form-label">ID Appointment</label>
-          <input type="text" class="form-control" id="id_appointment" placeholder="Scan for input" />
-          <button class="btn btn-scan" id="scanQr"><i class="bi bi-qr-code-scan"></i></button>
-        </div>
-        <div class="form-group visitor-type">
-          <label class="form-label">Visitor Type</label>
-
-          <div class="visitor-type-options">
-            <div class="form-check">
-              <input class="form-check-input" value="export" type="radio" name="visitor-type" id="visitorExport" />
-              <label class="form-check-label" for="visitorExport"> Export </label>
-            </div>
-
-            <div class="form-check">
-              <input class="form-check-input" value="non_export" type="radio" name="visitor-type" id="visitorNonExport" />
-              <label class="form-check-label" for="visitorNonExport"> Non Export </label>
-            </div>
+      <div class="col-6">
+        <div class="info-container card p-4">
+          <h5>Visitor Information</h5>
+          <div class="info-item">
+            <i class="bi bi-info-circle"></i>
+            <span class="info-label">Name</span>
+            <span class="info-value" id="info-name"></span>
           </div>
-        </div>
-        <div class="form-group">
-          <label for="" class="form-label">Visitor Card</label>
-          <select name="visitor-card" id="visitorCard">
-            <option value="">Select</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="" class="form-label">Parking Card</label>
-          <select class="form-select" name="parking-card" id="parkingCard">
-            <option value="">Select</option>
-          </select>
-        </div>
-        <div id="deviceList">
-          <div class="device-block">
-            <div class="form-group">
-              <label for="device_" class="form-label"> Electronic Device </label>
-
-              <div class="device-input">
-                <select class="form-select" name="device[]" id="device_">
-                  <option value="">Select</option>
-                </select>
-
-                <button type="button" class="btn btn-add" id="addDevice_" data-action="add">
-                  <i class="bi bi-plus-circle"></i>
-                </button>
-              </div>
-            </div>
-
-            <div class="form-group protection-type-group">
-              <label class="form-label">Protection Type</label>
-
-              <div class="protection-options">
-                <label class="form-check">
-                  <input class="form-check-input" value="case" type="radio" name="protection-type-0" id="case_" />
-                  <span class="form-check-label">Case</span>
-                </label>
-
-                <label class="form-check">
-                  <input class="form-check-input" value="sticker" type="radio" name="protection-type-0" id="sticker_" />
-                  <span class="form-check-label">Sticker</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="caseNumber_" class="form-label"> Protection Number </label>
-
-              <div class="protection-number">
-                <select class="form-select" name="case-number[]" id="caseNumber_">
-                  <option value="">Select</option>
-                </select>
-
-                <select class="form-select" name="sticker-number[]" id="stickerNumber_" hidden>
-                  <option value="">Select</option>
-                </select>
-              </div>
-            </div>
+          <div class="info-item">
+            <i class="bi bi-info-circle"></i>
+            <span class="info-label">Appointment Type</span>
+            <span class="info-value" id="info-appointment-type"></span>
+          </div>
+          <div class="info-item">
+            <i class="bi bi-info-circle"></i>
+            <span class="info-label">Date Appointment</span>
+            <span class="info-value" id="info-appointment-date"></span>
+          </div>
+          <div class="info-item">
+            <i class="bi bi-info-circle"></i>
+            <span class="info-label">Purpose</span>
+            <span class="info-value" id="info-purpose"></span>
+          </div>
+          <div class="info-item">
+            <i class="bi bi-info-circle"></i>
+            <span class="info-label">Host Name</span>
+            <span class="info-value" id="info-host"></span>
+          </div>
+          <div class="info-item">
+            <i class="bi bi-info-circle"></i>
+            <span class="info-label">Plat Number</span>
+            <span class="info-value" id="info-plat-number"></span>
           </div>
         </div>
       </div>
-      <div class="col-lg-6 col-md-6 col-sm-12">
-        <div class="form-group">
-          <label for="planCheckOut_" class="form-label">Plan Check Out</label>
-          <input type="text" class="form-control" id="planCheckOut_" placeholder="Plan Check Out" readonly />
-        </div>
-        <div class="form-group">
-          <label for="name_" class="form-label">Name</label>
-          <input type="text" class="form-control" id="name_" placeholder="Name" readonly />
-        </div>
-        <div class="form-group">
-          <label for="email_" class="form-label">Email</label>
-          <input type="text" class="form-control" id="email_" placeholder="Email" readonly />
-        </div>
-        <div class="form-group">
-          <label for="phoneNumber_" class="form-label">Phone Number</label>
-          <input type="text" class="form-control" id="phoneNumber_" placeholder="Phone Number" readonly />
-        </div>
-        <div class="form-group">
-          <label for="company_" class="form-label">Company Origin</label>
-          <input type="text" class="form-control" id="company_" placeholder="Company" readonly />
-        </div>
-        <div class="form-group">
-          <label for="purpose_" class="form-label">Purpose</label>
-          <input type="text" class="form-control" id="purpose_" placeholder="Purpose" readonly />
-        </div>
-        <div class="form-group">
-          <label for="employeeTarget_" class="form-label">Employee Target</label>
-          <input type="text" class="form-control" id="employeeTarget_" placeholder="Employee Target Name" readonly />
-        </div>
-      </div>
-      <div class="d-flex justify-content-end mt-3">
-        <button type="button" class="btn btn-primary rounded-5" id="checkinSubmit">Submit</button>
-      </div>
-    </div>
-  </form>
-</div>
-
-<!-- Modal take photo -->
-<div class="modal fade" id="modalPhoto" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <i class="bi bi-camera"></i>
-        <h1 class="modal-title fs-5" id="staticBackdropLabel">Take Photo</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="camera-container">
-          <video src="" id="cameraView" width="320" height="240"></video>
-          <canvas id="cameraCanvas" width="150" height="150"></canvas>
-          <div id="camera-status">
-            <div class="spinner-border text-primary mb-2" role="status"></div>
-            <span class="sr-only">Loading...</span>
-
-            <span>Waiting for camera access... If the camera does not appear, ensure you have granted camera permission to the browser.</span>
+      <div class="col-6">
+        <div class="qr-container card p-4">
+          <div class="item-qr">
+            <img src="" alt="" />
+            <i class="bi bi-qr-code-scan"></i>
           </div>
-          <div class="text-center mt-3">
-            <button id="switch-camera-btn" class="btn btn-outline-primary btn-sm" data-i18n="switch_camera">📷 Switch Camera</button>
-          </div>
-          <div class="text-center">
-            <button id="capture-btn" class="btn btn-primary" data-i18n="take_photo">Ambil Foto</button>
-            <button id="retake-btn" class="btn btn-secondary" data-i18n="retake_photo">Ambil Ulang</button>
-            <button id="save-photo-btn" class="btn btn-success" data-i18n="save_photo">Simpan Foto</button>
+          <div class="btn-wrapper">
+            <button class="btn btn-primary" id="download"><i class="bi bi-download"></i> Download Image</button>
           </div>
         </div>
       </div>
@@ -174,35 +64,295 @@
   </div>
 </div>
 
-<!-- Modal scan qr-->
-<div class="modal fade" id="modalPhoto" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <i class="bi bi-camera"></i>
-        <h1 class="modal-title fs-5" id="staticBackdropLabel">Take Photo</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="camera-container">
-          <video src="" id="cameraView" width="320" height="240"></video>
-          <canvas id="cameraCanvas" width="150" height="150"></canvas>
-          <div id="camera-status">
-            <div class="spinner-border text-primary mb-2" role="status"></div>
-            <span class="sr-only">Loading...</span>
+<script>
+  import Swal from "sweetalert2";
+  import { DashboardLayout } from "../layouts/DashboardLayout";
+  import { Grid, h } from "gridjs";
+  import { fetchAppointmentData, fetchDetailData } from "../services/history";
+  import "gridjs/dist/theme/mermaid.css";
+  import "../assets/css/history.css";
 
-            <span>Waiting for camera access... If the camera does not appear, ensure you have granted camera permission to the browser.</span>
+  let gridInstance = null;
+
+  function handleViewQrCode(id) {
+    if (!id) {
+      Swal.fire("Error", "Visit code not found", "error");
+      return;
+    }
+
+    // Navigate to detail page
+    window.location.href = `/qrData.json?id=${id}`;
+  }
+
+  async function loadTable(container) {
+    const wrapper = container.querySelector(".table-container");
+    if (!wrapper) return;
+
+    // Show loading state
+    wrapper.innerHTML = `
+    <div class="text-center py-4 text-muted">
+      <div class="spinner-border spinner-border-sm me-2"></div>
+      Load data...
+    </div>
+  `;
+
+    try {
+      let history = await fetchAppointmentData();
+
+      console.log("Raw data:", history);
+
+      if (history && !Array.isArray(history)) {
+        history = [history];
+      }
+
+      // Clear previous instance
+      if (gridInstance) {
+        gridInstance.destroy();
+        gridInstance = null;
+      }
+
+      // Handle empty data
+      if (!history || history.length === 0) {
+        wrapper.innerHTML = `
+        <div class="text-center py-4 text-muted">
+          No data available
+        </div>
+      `;
+        return;
+      }
+
+      // Clear wrapper for fresh start
+      wrapper.innerHTML = `<div id="gridjs-container"></div>`;
+
+      const gridContainer = wrapper.querySelector("#gridjs-container");
+      gridInstance = new Grid({
+        data: history.map((h, i) => ({
+          no: i + 1,
+          visit_code: h.visit_code,
+          visitor_name: h.visitor_name,
+          company_name: h.company_name,
+          plan_checkin: h.plan_checkin,
+          plan_checkout: h.plan_checkout || "-",
+          purpose: h.purpose,
+          host_name: h.host_name,
+          status: h.status,
+          action: h.visit_code,
+        })),
+        columns: [
+          {
+            name: "No",
+            id: "no",
+          },
+          {
+            name: "ID Appointment",
+            id: "visit_code",
+          },
+          {
+            name: "Name",
+            id: "visitor_name",
+          },
+          {
+            name: "Company",
+            id: "company_name",
+          },
+          {
+            name: "Plan Checkin",
+            id: "plan_checkin",
+          },
+          {
+            name: "Plan Checkout",
+            id: "plan_checkout",
+          },
+          {
+            name: "Purpose",
+            id: "purpose",
+          },
+          {
+            name: "Employee Target",
+            id: "host_name",
+          },
+          {
+            name: "Status",
+            id: "status",
+          },
+          {
+            name: "Action",
+            id: "action",
+            formatter: (cell, row) => {
+              // cell berisi visit_code dari kolom action
+              return h(
+                "button",
+                {
+                  type: "button",
+                  className: "btn btn-sm btn-outline-info btn-detail",
+                  onClick: () => handleViewQrCode(cell),
+                },
+                "View QR Code",
+              );
+            },
+          },
+        ],
+        search: true,
+        sort: true,
+        pagination: { limit: 10 },
+        language: {
+          search: { placeholder: "Search..." },
+          pagination: { message: "Showing page {start} of {end}" },
+          noRecordsFound: "No appointments found",
+        },
+        className: {
+          table: "table table-hover mb-0",
+          container: "gridjs-container",
+        },
+      }).render(gridContainer);
+    } catch (e) {
+      console.error("Error loading appointment data:", e);
+      wrapper.innerHTML = `
+      <div class="alert alert-danger" role="alert">
+        Failed to load appointment data. Please try again.
+      </div>
+    `;
+    }
+  }
+
+  const page = document.createElement("div");
+
+  // CONTENT HISTORY
+  function historyContent() {
+    page.innerHTML = `
+    <div class="page-title d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <div>
+            <h1 class="text-primary mb-3">Appointment History</h1>
+        </div>
+        <div>
+            <div class="count-group">
+                <p class="fw-semibold text-dark appointment-count">Total Schedule History</p>
+                <p class="badge badge-primary text-light fw-bold" id="totalAppointment">70</p>
+                <p class="text-muted fw-semibold">Schedule</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-4">
+        <div class="table-container"></div>
+    </div>
+  `;
+    setTimeout(() => {
+      loadTable(page);
+    }, 0);
+    return page;
+  }
+
+  async function downloadQrContent(id) {
+    try {
+      const response = await fetchDetailData(id);
+
+      // Validasi response
+      if (!response || !response.res) {
+        throw new Error("Failed to fetch detail data");
+      }
+
+      const detailData = response.res;
+      // let data = Array.isArray(detailData) ? detailData[0] : detailData;
+      console.log("datanya", detailData);
+
+      page.innerHTML = `
+    <div class="page-title d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+      <div>
+        <h1 class="text-primary mb-3">Detail Information</h1>
+      </div>
+      <div>
+        <p class="text-dark fw-semibold">Download this QR for easier registration</p>
+      </div>
+    </div>
+
+    <div class="card p-4">
+      <div class="title-container">
+        <h5 class="page-title">Detail Appointment</h5>
+        <span class="qr-info"><i class="bi bi-info-circle"></i>Show this QR Code to Security personnel</span>
+      </div>
+      <div>
+        <div class="row">
+          <div class="col-6">
+            <div class="info-container card p-4">
+              <h5>Visitor Information</h5>
+              <div class="info-item">
+                <i class="bi bi-info-circle"></i>
+                <span class="info-label">Name</span>
+                <span class="info-value" id="info-name">${detailData.visitor_name || "-"}</span>
+              </div>
+              <div class="info-item">
+                <i class="bi bi-info-circle"></i>
+                <span class="info-label">Appointment Type</span>
+                <span class="info-value" id="info-appointment-type">${detailData.appointment_type || "-"}</span>
+              </div>
+              <div class="info-item">
+                <i class="bi bi-info-circle"></i>
+                <span class="info-label">Date Appointment</span>
+                <span class="info-value" id="info-appointment-date">${detailData.plan_checkin || "-"}</span>
+              </div>
+              <div class="info-item">
+                <i class="bi bi-info-circle"></i>
+                <span class="info-label">Purpose</span>
+                <span class="info-value" id="info-purpose">${detailData.purpose || "-"}</span>
+              </div>
+              <div class="info-item">
+                <i class="bi bi-info-circle"></i>
+                <span class="info-label">Host Name</span>
+                <span class="info-value" id="info-host">${detailData.host_name || "-"}</span>
+              </div>
+              <div class="info-item">
+                <i class="bi bi-info-circle"></i>
+                <span class="info-label">Plat Number</span>
+                <span class="info-value" id="info-plat-number">${detailData.plat_number || "-"}</span>
+              </div>
+            </div>
           </div>
-          <div class="text-center mt-3">
-            <button id="switch-camera-btn" class="btn btn-outline-primary btn-sm" data-i18n="switch_camera">📷 Switch Camera</button>
-          </div>
-          <div class="text-center">
-            <button id="capture-btn" class="btn btn-primary" data-i18n="take_photo">Ambil Foto</button>
-            <button id="retake-btn" class="btn btn-secondary" data-i18n="retake_photo">Ambil Ulang</button>
-            <button id="save-photo-btn" class="btn btn-success" data-i18n="save_photo">Simpan Foto</button>
+          <div class="col-6">
+            <div class="qr-container card p-4">
+              <div class="item-qr">
+                <img src="${detailData.qr_code || ""}" alt="QR Code" />
+                <i class="bi bi-qr-code-scan"></i>
+              </div>
+              <div class="btn-wrapper">
+                <button class="btn btn-primary" id="download"><i class="bi bi-download"></i> Download Image</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
+    `;
+
+      // Add download button event listener
+      const downloadBtn = page.querySelector("#download");
+      if (downloadBtn) {
+        downloadBtn.addEventListener("click", () => downloadQrCode(detailData.qr_code));
+      }
+    } catch (e) {
+      console.error("Error loading detail data:", e);
+      page.innerHTML = `
+      <div class="alert alert-danger" role="alert">
+        Failed to load detail information. Please try again.
+      </div>
+    `;
+    }
+  }
+
+  // Helper function untuk download QR Code
+  function downloadQrCode(qrUrl) {
+    if (!qrUrl) {
+      Swal.fire("Error", "QR Code not found", "error");
+      return;
+    }
+
+    const link = document.createElement("a");
+    link.href = qrUrl;
+    link.download = `qr-code-${Date.now()}.png`;
+    link.click();
+  }
+
+  export function HistoryPage() {
+    return DashboardLayout(historyContent);
+  }
+</script>

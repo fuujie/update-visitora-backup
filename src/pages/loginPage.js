@@ -1,7 +1,7 @@
 // src/pages/LoginPage.js
 import Swal from "sweetalert2";
 
-import { loginUser } from "../services/auth.js";
+// import { loginUser } from "../services/auth.js";
 import "../assets/css/login.css";
 
 // ─── Helper terjemahan ───────────────────────────────────────────
@@ -34,6 +34,59 @@ function initLanguage(container) {
   select.addEventListener("change", function () {
     window.VisitoraLanguage.changeLanguage(this.value);
   });
+}
+
+const DUMMY_USERS = [
+  {
+    email: "admin@visitora.com",
+    password: "password123",
+    user: {
+      id: 1,
+      name: "Administrator",
+      email: "test@visitora.com",
+      role: "admin",
+    },
+    token: "dummy_token_abc123xyz",
+  },
+  {
+    email: "user@visitora.com",
+    password: "password123",
+    user: {
+      id: 2,
+      name: "Visitor User",
+      email: "user@visitora.com",
+      role: "visitor",
+    },
+    token: "dummy_token_def456uvw",
+  },
+];
+
+async function mockLoginUser(email, password) {
+  // Simulasi network delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
+
+  const user = DUMMY_USERS.find((u) => u.email === email && u.password === password);
+
+  if (user) {
+    return {
+      ok: true,
+      data: {
+        token: user.token,
+        user: user.user,
+      },
+    };
+  }
+
+  return {
+    ok: false,
+    data: {
+      messages: {
+        error: "Email atau password salah",
+      },
+      attempts_left: 2,
+      retry_after: null,
+    },
+  };
 }
 
 // ─── Error handler ───────────────────────────────────────────────
@@ -90,7 +143,7 @@ function initLoginHandler(container) {
     btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t("processing") || "Memproses..."}`;
 
     try {
-      const { ok, data } = await loginUser(email, password);
+      const { ok, data } = await mockLoginUser(email, password);
 
       if (ok && data.token) {
         localStorage.setItem("token", data.token);

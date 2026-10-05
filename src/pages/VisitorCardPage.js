@@ -1,13 +1,13 @@
 import Swal from "sweetalert2";
-import { DataTable } from "simple-datatables";
 import { DashboardLayout } from "../layouts/DashboardLayout.js";
 import { fetchVisitorCardTypes, fetchVisitorCard, createVisitorCard, updateVisitorCard, deleteVisitorCard } from "../services/visitor-card.js";
 import "../assets/css/styles.css";
-import "../assets/css/datatable-visitor-card.css";
 import Choices from "choices.js";
 import "choices.js/public/assets/styles/choices.min.css";
+import { Grid } from "gridjs";
+import "gridjs/dist/theme/mermaid.css";
 
-let dtInstance = null;
+let gridInstance = null;
 let addVisitorCard = null;
 let addVisitorCardChoices = null;
 let editVisitorCard = null;
@@ -21,9 +21,9 @@ const STATUS_LABEL = {
 
 // ─── Render table ────────────────────────────────────────────────
 async function loadTable(container) {
-  if (dtInstance) {
-    dtInstance.destroy();
-    dtInstance = null;
+  if (gridInstance) {
+    gridInstance.destroy();
+    gridInstance = null;
   }
 
   const wrapper = container.querySelector("#visitor-card-table-wrapper");
@@ -33,9 +33,9 @@ async function loadTable(container) {
 
   try {
     const { id_cards = [] } = await fetchVisitorCard();
-    if (dtInstance) {
-      dtInstance.destroy();
-      dtInstance = null;
+    if (gridInstance) {
+      gridInstance.destroy();
+      gridInstance = null;
     }
 
     wrapper.innerHTML = `
@@ -78,23 +78,26 @@ async function loadTable(container) {
           }
         </tbody>
       </table>
+      <div id="gridjs-container"></div>
     `;
 
-    if (id_cards.length > 0) {
-      dtInstance = new DataTable("#visitor-card-table", {
-        searchable: true,
-        fixedHeight: false,
-        perPage: 10,
-        perPageSelect: [10, 25, 50, 100],
-        labels: {
-          placeholder: "Search...",
-          perPage: " ",
-          noRows: "Not found",
-          info: "Showing {start} to {end} of {rows} entries",
-        },
-        columns: [{ select: 4, sortable: false }],
-      });
-    }
+    const tableElement = wrapper.querySelector("#visitor-card-table");
+    const gridContainer = wrapper.querySelector("#gridjs-container");
+
+    gridInstance = new Grid({
+      from: tableElement,
+      search: true,
+      sort: true,
+      pagination: { limit: 10 },
+      language: {
+        search: { placeholder: "Search..." },
+        pagination: true,
+        noRecordsFound: "Loading...",
+      },
+      className: {
+        table: "table table-hover mb-0",
+      },
+    }).render(gridContainer);
   } catch (e) {
     wrapper.innerHTML = `<div class="text-center py-4 text-danger">${e.message}</div>`;
     console.error(e);

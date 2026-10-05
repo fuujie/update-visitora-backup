@@ -1,14 +1,14 @@
 import Swal from "sweetalert2";
 import { DashboardLayout } from "../layouts/DashboardLayout";
-import { DataTable } from "simple-datatables";
 import { fetchDataCheckin } from "../services/data-checkin";
 import "../assets/css/data-checkin.css";
 import AirDatepicker from "air-datepicker";
 import localeEnModule from "air-datepicker/locale/en";
+import { Grid } from "gridjs";
+import "gridjs/dist/theme/mermaid.css";
 
-let dtInstance = null;
+let gridInstance = null;
 
-// handler inisiasi date format
 const localeEn = localeEnModule.default || localeEnModule;
 
 function reportTime() {
@@ -48,9 +48,9 @@ async function loadTable(container) {
     const report = await fetchDataCheckin();
     console.log("pages", report);
 
-    if (dtInstance) {
-      dtInstance.destroy();
-      dtInstance = null;
+    if (gridInstance) {
+      gridInstance.destroy();
+      gridInstance = null;
     }
 
     if (!Array.isArray(report) || report.length === 0) {
@@ -109,25 +109,25 @@ async function loadTable(container) {
             .join("")}
         </tbody>
       </table>
+    <div id="gridjs-container"></div>
     `;
+    const tableElement = wrapper.querySelector("#report-table");
+    const gridContainer = wrapper.querySelector("#gridjs-container");
 
-    dtInstance = new DataTable("#report-table", {
-      searchable: true,
-      fixedHeight: false,
-      perPageSelect: [10, 25, 50],
-      labels: {
-        placeholder: "Search...",
-        perPage: "",
-        noRows: "Tidak ada data",
-        info: "Menampilkan {start}-{end} dari {rows} data",
+    gridInstance = new Grid({
+      from: tableElement,
+      search: true,
+      sort: true,
+      pagination: { limit: 10 },
+      language: {
+        search: { placeholder: "Search..." },
+        pagination: true,
+        noRecordsFound: "Loading...",
       },
-      columns: [
-        {
-          select: 3,
-          sortable: false,
-        },
-      ],
-    });
+      className: {
+        table: "table table-hover mb-0",
+      },
+    }).render(gridContainer);
   } catch (e) {
     console.error("Gagal memuat data check-in:", e);
 

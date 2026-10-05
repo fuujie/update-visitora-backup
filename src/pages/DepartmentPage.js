@@ -1,14 +1,13 @@
-// src/pages/DepartmentPage.js
 import Swal from "sweetalert2";
-import { DataTable } from "simple-datatables";
 import Choices from "choices.js";
 import "choices.js/public/assets/styles/choices.min.css";
 import { DashboardLayout } from "../layouts/DashboardLayout.js";
 import { fetchDepartments, fetchDepartmentById, createDepartment, updateDepartment, deleteDepartment } from "../services/department.js";
 import { fetchCompanies } from "../services/company.js";
-import "../assets/css/datatable-department.css";
+import { Grid } from "gridjs";
+import "gridjs/dist/theme/mermaid.css";
 
-let dtInstance = null;
+let gridInstance = null;
 let addChoices = null;
 let editChoices = null;
 
@@ -50,9 +49,9 @@ async function loadTable(container) {
   try {
     const { departments = [] } = await fetchDepartments();
 
-    if (dtInstance) {
-      dtInstance.destroy();
-      dtInstance = null;
+    if (gridInstance) {
+      gridInstance.destroy();
+      gridInstance = null;
     }
 
     wrapper.innerHTML = `
@@ -93,22 +92,25 @@ async function loadTable(container) {
           }
         </tbody>
       </table>
+      <div id="gridjs-container"></div>
     `;
+    const tableElement = wrapper.querySelector("#department-table");
+    const gridContainer = wrapper.querySelector("#gridjs-container");
 
-    if (departments.length > 0) {
-      dtInstance = new DataTable("#department-table", {
-        searchable: true,
-        fixedHeight: false,
-        perPageSelect: [10, 25, 50],
-        labels: {
-          placeholder: "Search...",
-          perPage: " ",
-          noRows: "Tidak ada data",
-          info: "Menampilkan {start}-{end} dari {rows} data",
-        },
-        columns: [{ select: 3, sortable: false }],
-      });
-    }
+    gridInstance = new Grid({
+      from: tableElement,
+      search: true,
+      sort: true,
+      pagination: { limit: 10 },
+      language: {
+        search: { placeholder: "Search..." },
+        pagination: true,
+        noRecordsFound: "Loading...",
+      },
+      className: {
+        table: "table table-hover mb-0",
+      },
+    }).render(gridContainer);
   } catch (e) {
     wrapper.innerHTML = `<div class="text-center py-4 text-danger">${e.message}</div>`;
   }
@@ -144,7 +146,7 @@ function initAddHandler(container) {
 
   btnAdd.addEventListener("click", async () => {
     const name = container.querySelector("#add_name").value.trim();
-    const companyId = addChoices.getValue(true); // true = return raw value
+    const companyId = addChoices.getValue(true);
 
     if (!name || !companyId) {
       Swal.fire({ title: "Nama dan perusahaan wajib diisi!", icon: "warning" });

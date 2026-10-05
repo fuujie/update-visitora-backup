@@ -13,6 +13,10 @@ import { VisitorsPage } from "../pages/VisitorsPage.js";
 import { CreateAppointmentPage } from "../pages/CreateAppointment.js";
 import { DataCheckinPage } from "../pages/DataCheckinPage.js";
 import { CheckinPage } from "../pages/VisitorCheckinPage.js";
+import { CheckoutPage } from "../pages/VisitorCheckoutPage.js";
+import { HistoryPage } from "../pages/HistoryPage.js";
+import { BuildingPage } from "../pages/BuildingPage.js";
+import { AreaPage } from "../pages/AreaPage.js";
 
 // ─── Definisi routes ────────────────────────────────────────────
 const routes = {
@@ -31,6 +35,10 @@ const routes = {
   "/visiting-schedule": CreateAppointmentPage,
   "/data-checkin": DataCheckinPage,
   "/visitor-checkin": CheckinPage,
+  "/visitor-checkout": CheckoutPage,
+  "/history": HistoryPage,
+  "/building": BuildingPage,
+  "/area": AreaPage,
 };
 
 // ─── Auth guard ─────────────────────────────────────────────────
@@ -49,6 +57,10 @@ const protectedRoutes = [
   "/visiting-schedule",
   "/data-checkin",
   "/visitor-checkin",
+  "/visitor-checkout",
+  "/history",
+  "/building",
+  "/area",
 ];
 
 function isAuthenticated() {

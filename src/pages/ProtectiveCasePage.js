@@ -1,11 +1,11 @@
 import Swal from "sweetalert2";
-import { DataTable } from "simple-datatables";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import { fetchProtectiveCase, createProtectiveCase, updateProtectiveCase, deleteProtectiveCase } from "../services/protective-case";
 import "../assets/css/styles.css";
-import "../assets/css/datatable-visitor-card.css";
+import { Grid } from "gridjs";
+import "gridjs/dist/theme/mermaid.css";
 
-let dtInstance = null;
+let gridInstance = null;
 let addProtectiveCase = null;
 let editProtectiveCase = null;
 let deleteProtectiveCaseData = null;
@@ -18,9 +18,9 @@ const STATUS_LABEL = {
 
 // ─── Load table ──────────────────────────────────────────────────
 async function loadTable(container) {
-  if (dtInstance) {
-    dtInstance.destroy();
-    dtInstance = null;
+  if (gridInstance) {
+    gridInstance.destroy();
+    gridInstance = null;
   }
 
   const wrapper = container.querySelector("#protective-case-table-wrapper");
@@ -31,10 +31,6 @@ async function loadTable(container) {
 
   try {
     const { protective_case = [] } = await fetchProtectiveCase();
-    if (dtInstance) {
-      dtInstance.destroy();
-      dtInstance = null;
-    }
 
     wrapper.innerHTML = `
     <table id="protective-case-table" class="table table-hover mb-0">
@@ -74,22 +70,25 @@ async function loadTable(container) {
             }
         </tbody>
     </table>
+    <div id="gridjs-container"></div>
     `;
-    if (sticker_data.length > 0) {
-      dtInstance = new DataTable("#sticker-block-table", {
-        searchable: true,
-        fixedHeight: false,
-        perpage: 10,
-        perPageSelect: [10, 25, 50, 100],
-        labels: {
-          placeholder: "Search...",
-          perPage: " ",
-          noRows: "Not found",
-          info: "Showing {start} to {end} of {rows} entries",
-        },
-        columns: [{ select: 4, sortable: false }],
-      });
-    }
+    const tableElement = wrapper.querySelector("#protective-case-table");
+    const gridContainer = wrapper.querySelector("#gridjs-container");
+
+    gridInstance = new Grid({
+      from: tableElement,
+      search: true,
+      sort: true,
+      pagination: { limit: 10 },
+      language: {
+        search: { placeholder: "Search..." },
+        pagination: true,
+        noRecordsFound: "Loading...",
+      },
+      className: {
+        table: "table table-hover mb-0",
+      },
+    }).render(gridContainer);
   } catch (e) {
     wrapper.innerHTML = `<div class="text-center py-4 text-danger">${e.message}</div>`;
     console.error(e);

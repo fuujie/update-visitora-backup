@@ -1,10 +1,10 @@
 import Swal from "sweetalert2";
-import { DataTable } from "simple-datatables";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import { fetchVisitors, fetchDetailVisitor } from "../services/visitor-list";
-import "../assets/css/datatable-visitors.css";
+import { Grid } from "gridjs";
+import "gridjs/dist/theme/mermaid.css";
 
-let dtInstance = null;
+let gridInstance = null;
 
 function resetModalContent(container) {
   container.querySelector("#visitor_id").value = "";
@@ -94,9 +94,9 @@ async function loadTable(container) {
 
   try {
     const { visitors = [] } = await fetchVisitors();
-    if (dtInstance) {
-      dtInstance.destroy();
-      dtInstance = null;
+    if (gridInstance) {
+      gridInstance.destroy();
+      gridInstance = null;
     }
 
     wrapper.innerHTML = `
@@ -125,7 +125,7 @@ async function loadTable(container) {
                 <td>${v.phone_number}</td>
                 <td>${v.email}</td>
                 <td>${v.company_origin}</td>
-                <td>${v.id_number}</td>
+                <td>${v.identity_number}</td>
                 <td class="text-center">
                     <button class="btn d-block btn-sm btn-outline-primary me-1 btn-detail"
                     data-id="${v.visitor_id}" title="Detail">
@@ -139,22 +139,25 @@ async function loadTable(container) {
         }
         </tbody>
     </table>
+    <div id="gridjs-container"></div>
     `;
-    if (visitors.length > 0) {
-      const tableEl = wrapper.querySelector("#visitors-table");
-      dtInstance = new DataTable(tableEl, {
-        searchable: true,
-        fixedHeight: false,
-        perPageSelect: [10, 25, 50],
-        labels: {
-          placeholder: "Search...",
-          perPage: " ",
-          noRows: "Not found",
-          info: "Showing {start}-{end} from {rows} data",
-        },
-        columns: [{ select: 6, sortable: false }],
-      });
-    }
+    const tableElement = wrapper.querySelector("#visitors-table");
+    const gridContainer = wrapper.querySelector("#gridjs-container");
+
+    gridInstance = new Grid({
+      from: tableElement,
+      search: true,
+      sort: true,
+      pagination: { limit: 10 },
+      language: {
+        search: { placeholder: "Search..." },
+        pagination: true,
+        noRecordsFound: "Loading...",
+      },
+      className: {
+        table: "table table-hover mb-0",
+      },
+    }).render(gridContainer);
   } catch (e) {
     wrapper.innerHTML = `<div class="text-center py-4 text-danger">${e.message}</div>`;
   }

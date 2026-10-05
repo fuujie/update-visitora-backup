@@ -1,15 +1,14 @@
-// src/pages/HostPage.js
 import Swal from "sweetalert2";
-import { DataTable } from "simple-datatables";
 import Choices from "choices.js";
 import "choices.js/public/assets/styles/choices.min.css";
 import { DashboardLayout } from "../layouts/DashboardLayout.js";
 import { fetchHosts, fetchHostById, fetchDepartmentsByCompany, createHost, updateHost, deleteHost } from "../services/host.js";
 import { fetchCompanies } from "../services/company.js";
-import "../assets/css/datatable-host.css";
 import "../assets/css/styles.css";
+import { Grid } from "gridjs";
+import "gridjs/dist/theme/mermaid.css";
 
-let dtInstance = null;
+let gridInstance = null;
 let addCompanyChoices = null;
 let addDeptChoices = null;
 let editCompanyChoices = null;
@@ -94,9 +93,9 @@ async function loadTable(container) {
   try {
     const { hosts = [] } = await fetchHosts();
 
-    if (dtInstance) {
-      dtInstance.destroy();
-      dtInstance = null;
+    if (gridInstance) {
+      gridInstance.destroy();
+      gridInstance = null;
     }
 
     wrapper.innerHTML = `
@@ -143,22 +142,25 @@ async function loadTable(container) {
           }
         </tbody>
       </table>
+      <div id="gridjs-container"></div>
     `;
+    const tableElement = wrapper.querySelector("#host-table");
+    const gridContainer = wrapper.querySelector("#gridjs-container");
 
-    if (hosts.length > 0) {
-      dtInstance = new DataTable("#host-table", {
-        searchable: true,
-        fixedHeight: false,
-        perPageSelect: [10, 25, 50],
-        labels: {
-          placeholder: "Search...",
-          perPage: " ",
-          noRows: "Not found",
-          info: "Showing {start}-{end} from {rows} data",
-        },
-        columns: [{ select: 6, sortable: false }],
-      });
-    }
+    gridInstance = new Grid({
+      from: tableElement,
+      search: true,
+      sort: true,
+      pagination: { limit: 10 },
+      language: {
+        search: { placeholder: "Search..." },
+        pagination: true,
+        noRecordsFound: "Loading...",
+      },
+      className: {
+        table: "table table-hover mb-0",
+      },
+    }).render(gridContainer);
   } catch (e) {
     wrapper.innerHTML = `<div class="text-center py-4 text-danger">${e.message}</div>`;
   }

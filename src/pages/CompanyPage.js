@@ -1,14 +1,13 @@
-// src/pages/CompanyPage.js
 import Swal from "sweetalert2";
-import { DataTable } from "simple-datatables";
-import "simple-datatables/dist/style.css";
 import { DashboardLayout } from "../layouts/DashboardLayout.js";
-import { fetchCompanies, fetchCompanyById, createCompany, updateCompany, deleteCompany } from "../services/company.js";
+import { fetchCompanies } from "../services/company.js";
 import "../assets/css/company.css";
-import "../assets/css/datatable-company.css";
+import { Grid } from "gridjs";
+import "gridjs/dist/theme/mermaid.css";
+import "../assets/css/company.css";
 
 // ─── State ───────────────────────────────────────────────────────
-let dtInstance = null;
+let gridInstance = null;
 
 // ─── Render tabel ────────────────────────────────────────────────
 async function loadTable(container) {
@@ -18,15 +17,9 @@ async function loadTable(container) {
   </div>`;
 
   try {
-    const { companies = [] } = await fetchCompanies();
-
-    if (dtInstance) {
-      dtInstance.destroy();
-      dtInstance = null;
-    }
-
+    const companiesData = await fetchCompanies();
     wrapper.innerHTML = `
-      <table id="company-table" class="table table-hover mb-0">
+      <table id="company-table" class="table table-hover mb-0" style="display: none;">
         <thead>
           <tr>
             <th>No</th>
@@ -36,54 +29,63 @@ async function loadTable(container) {
           </tr>
         </thead>
         <tbody>
-          ${
-            companies.length === 0
-              ? `<tr><td colspan="4" class="text-center py-4 text-muted">Belum ada data perusahaan</td></tr>`
-              : companies
-                  .map(
-                    (c, i) => `
-              <tr>
-                <td>${i + 1}</td>
-                <td>${c.name}</td>
-                <td>${c.address || "-"}</td>
-                <td>
-                    <div class="action-wrapper">
-                        <button class="btn btn-sm btn-outline-primary me-1 btn-edit"
-                        data-id="${c.company_id}" title="Edit">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-danger btn-delete"
-                        data-id="${c.company_id}" data-name="${c.name}" title="Hapus">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                </td>
-              </tr>
-            `,
-                  )
-                  .join("")
-          }
+          ${companiesData
+            .map(
+              (company, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${company.name}</td>
+              <td>${company.address || "-"}</td>
+              <td>
+                <div class="action-wrapper d-flex gap-1">
+                  <button class="btn btn-sm btn-outline-primary btn-edit" 
+                    data-id="${company.company_id}" 
+                    type="button"
+                    title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger btn-delete" 
+                    data-id="${company.company_id}" 
+                    data-name="${company.name}" 
+                    type="button"
+                    title="Hapus">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `,
+            )
+            .join("")}
         </tbody>
       </table>
+      <div id="gridjs-container"></div>
     `;
 
-    if (companies.length > 0) {
-      dtInstance = new DataTable("#company-table", {
-        searchable: true,
-        fixedHeight: false,
-        perPageSelect: [10, 25, 50],
-        labels: {
-          placeholder: "Search...",
-          perPage: "",
-          // lengthMenu: "",
-          noRows: "Tidak ada data",
-          info: "Menampilkan {start}-{end} dari {rows} data",
-        },
-        columns: [{ select: 3, sortable: false }],
-      });
-    }
+    const tableElement = wrapper.querySelector("#company-table");
+    const gridContainer = wrapper.querySelector("#gridjs-container");
+
+    gridInstance = new Grid({
+      from: tableElement,
+      search: true,
+      sort: true,
+      pagination: { limit: 10 },
+      language: {
+        search: { placeholder: "Search..." },
+        pagination: true,
+        noRecordsFound: "Loading...",
+      },
+      className: {
+        table: "table table-hover mb-0",
+      },
+    }).render(gridContainer);
   } catch (e) {
-    wrapper.innerHTML = `<div class="text-center py-4 text-danger">${e.message}</div>`;
+    console.error(e);
+    Swal.fire({
+      title: "Error!",
+      text: "Gagal memuat data perusahaan.",
+      icon: "error",
+    });
   }
 }
 
@@ -98,7 +100,7 @@ function exportCSV(container) {
   const rows = [...table.querySelectorAll("thead tr, tbody tr")];
   const csv = rows
     .map((row) => {
-      const cells = [...row.querySelectorAll("th, td")].slice(0, -1); // skip kolom aksi
+      const cells = [...row.querySelectorAll("th, td")].slice(0, -1);
       return cells.map((c) => `"${c.innerText.replace(/"/g, '""')}"`).join(",");
     })
     .join("\n");
@@ -111,131 +113,131 @@ function exportCSV(container) {
 }
 
 // ─── Add company handler ─────────────────────────────────────────
-function initAddHandler(container) {
-  const form = container.querySelector("#add-company-form");
-  const btnAdd = container.querySelector("#btn-submit-add");
-  const modal = bootstrap.Modal.getOrCreateInstance(container.querySelector("#modal-add-company"));
+// function initAddHandler(container) {
+//   const form = container.querySelector("#add-company-form");
+//   const btnAdd = container.querySelector("#btn-submit-add");
+//   const modal = bootstrap.Modal.getOrCreateInstance(container.querySelector("#modal-add-company"));
 
-  btnAdd.addEventListener("click", async () => {
-    const name = container.querySelector("#add_name").value.trim();
-    const address = container.querySelector("#add_address").value.trim();
+//   btnAdd.addEventListener("click", async () => {
+//     const name = container.querySelector("#add_name").value.trim();
+//     const address = container.querySelector("#add_address").value.trim();
 
-    if (!name || !address) {
-      Swal.fire({ title: "Nama dan alamat wajib diisi!", icon: "warning" });
-      return;
-    }
+//     if (!name || !address) {
+//       Swal.fire({ title: "Nama dan alamat wajib diisi!", icon: "warning" });
+//       return;
+//     }
 
-    const orig = btnAdd.innerHTML;
-    btnAdd.disabled = true;
-    btnAdd.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...`;
+//     const orig = btnAdd.innerHTML;
+//     btnAdd.disabled = true;
+//     btnAdd.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...`;
 
-    try {
-      const { ok, data } = await createCompany({ name, address });
-      if (ok) {
-        Swal.fire({ title: "Berhasil!", text: "Perusahaan berhasil ditambahkan.", icon: "success", timer: 1500, showConfirmButton: false });
-        form.reset();
-        modal.hide();
-        loadTable(container);
-      } else {
-        Swal.fire({ title: "Gagal!", text: data?.message || "Perusahaan gagal ditambahkan.", icon: "error" });
-      }
-    } catch (e) {
-      Swal.fire({ title: "Error!", text: e.message, icon: "error" });
-    } finally {
-      btnAdd.disabled = false;
-      btnAdd.innerHTML = orig;
-    }
-  });
-}
+//     try {
+//       const { ok, data } = await createCompany({ name, address });
+//       if (ok) {
+//         Swal.fire({ title: "Berhasil!", text: "Perusahaan berhasil ditambahkan.", icon: "success", timer: 1500, showConfirmButton: false });
+//         form.reset();
+//         modal.hide();
+//         loadTable(container);
+//       } else {
+//         Swal.fire({ title: "Gagal!", text: data?.message || "Perusahaan gagal ditambahkan.", icon: "error" });
+//       }
+//     } catch (e) {
+//       Swal.fire({ title: "Error!", text: e.message, icon: "error" });
+//     } finally {
+//       btnAdd.disabled = false;
+//       btnAdd.innerHTML = orig;
+//     }
+//   });
+// }
 
 // ─── Edit company handler ────────────────────────────────────────
-function initEditHandler(container) {
-  const btnSave = container.querySelector("#btn-submit-edit");
-  const editModal = bootstrap.Modal.getOrCreateInstance(container.querySelector("#modal-edit-company"));
+// function initEditHandler(container) {
+//   const btnSave = container.querySelector("#btn-submit-edit");
+//   const editModal = bootstrap.Modal.getOrCreateInstance(container.querySelector("#modal-edit-company"));
 
-  // Delegasi klik ke tombol edit di tabel
-  container.querySelector("#company-table-wrapper").addEventListener("click", async (e) => {
-    const btn = e.target.closest(".btn-edit");
-    if (!btn) return;
+//   // Delegasi klik ke tombol edit di tabel
+//   container.querySelector("#company-table-wrapper").addEventListener("click", async (e) => {
+//     const btn = e.target.closest(".btn-edit");
+//     if (!btn) return;
 
-    const id = btn.dataset.id;
-    try {
-      const { company } = await fetchCompanyById(id);
-      container.querySelector("#edit_id").value = company.company_id;
-      container.querySelector("#edit_name").value = company.name;
-      container.querySelector("#edit_address").value = company.address || "";
-      editModal.show();
-    } catch (e) {
-      Swal.fire({ title: "Gagal mengambil data!", text: e.message, icon: "error" });
-    }
-  });
+//     const id = btn.dataset.id;
+//     try {
+//       const { company } = await fetchCompanyById(id);
+//       container.querySelector("#edit_id").value = company.company_id;
+//       container.querySelector("#edit_name").value = company.name;
+//       container.querySelector("#edit_address").value = company.address || "";
+//       editModal.show();
+//     } catch (e) {
+//       Swal.fire({ title: "Gagal mengambil data!", text: e.message, icon: "error" });
+//     }
+//   });
 
-  btnSave.addEventListener("click", async () => {
-    const id = container.querySelector("#edit_id").value;
-    const name = container.querySelector("#edit_name").value.trim();
-    const address = container.querySelector("#edit_address").value.trim();
+//   btnSave.addEventListener("click", async () => {
+//     const id = container.querySelector("#edit_id").value;
+//     const name = container.querySelector("#edit_name").value.trim();
+//     const address = container.querySelector("#edit_address").value.trim();
 
-    if (!name || !address) {
-      Swal.fire({ title: "Nama dan alamat wajib diisi!", icon: "warning" });
-      return;
-    }
+//     if (!name || !address) {
+//       Swal.fire({ title: "Nama dan alamat wajib diisi!", icon: "warning" });
+//       return;
+//     }
 
-    const orig = btnSave.innerHTML;
-    btnSave.disabled = true;
-    btnSave.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...`;
+//     const orig = btnSave.innerHTML;
+//     btnSave.disabled = true;
+//     btnSave.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...`;
 
-    try {
-      const { ok, data } = await updateCompany(id, { name, address });
-      if (ok) {
-        Swal.fire({ title: "Berhasil!", text: "Perusahaan berhasil diperbarui.", icon: "success", timer: 1500, showConfirmButton: false });
-        editModal.hide();
-        loadTable(container);
-      } else {
-        Swal.fire({ title: "Gagal!", text: data?.message || "Gagal memperbarui perusahaan.", icon: "error" });
-      }
-    } catch (e) {
-      Swal.fire({ title: "Error!", text: e.message, icon: "error" });
-    } finally {
-      btnSave.disabled = false;
-      btnSave.innerHTML = orig;
-    }
-  });
-}
+//     try {
+//       const { ok, data } = await updateCompany(id, { name, address });
+//       if (ok) {
+//         Swal.fire({ title: "Berhasil!", text: "Perusahaan berhasil diperbarui.", icon: "success", timer: 1500, showConfirmButton: false });
+//         editModal.hide();
+//         loadTable(container);
+//       } else {
+//         Swal.fire({ title: "Gagal!", text: data?.message || "Gagal memperbarui perusahaan.", icon: "error" });
+//       }
+//     } catch (e) {
+//       Swal.fire({ title: "Error!", text: e.message, icon: "error" });
+//     } finally {
+//       btnSave.disabled = false;
+//       btnSave.innerHTML = orig;
+//     }
+//   });
+// }
 
-// ─── Delete company handler ──────────────────────────────────────
-function initDeleteHandler(container) {
-  container.querySelector("#company-table-wrapper").addEventListener("click", async (e) => {
-    const btn = e.target.closest(".btn-delete");
-    if (!btn) return;
+// // ─── Delete company handler ──────────────────────────────────────
+// function initDeleteHandler(container) {
+//   container.querySelector("#company-table-wrapper").addEventListener("click", async (e) => {
+//     const btn = e.target.closest(".btn-delete");
+//     if (!btn) return;
 
-    const id = btn.dataset.id;
-    const name = btn.dataset.name;
+//     const id = btn.dataset.id;
+//     const name = btn.dataset.name;
 
-    const confirm = await Swal.fire({
-      title: `Hapus "${name}"?`,
-      text: "Data yang dihapus tidak dapat dikembalikan.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d4183d",
-      confirmButtonText: "Ya, hapus!",
-      cancelButtonText: "Batal",
-    });
+//     const confirm = await Swal.fire({
+//       title: `Hapus "${name}"?`,
+//       text: "Data yang dihapus tidak dapat dikembalikan.",
+//       icon: "warning",
+//       showCancelButton: true,
+//       confirmButtonColor: "#d4183d",
+//       confirmButtonText: "Ya, hapus!",
+//       cancelButtonText: "Batal",
+//     });
 
-    if (!confirm.isConfirmed) return;
+//     if (!confirm.isConfirmed) return;
 
-    try {
-      const { ok, data } = await deleteCompany(id);
-      if (ok) {
-        Swal.fire({ title: "Terhapus!", text: "Perusahaan berhasil dihapus.", icon: "success", timer: 1500, showConfirmButton: false });
-        loadTable(container);
-      } else {
-        Swal.fire({ title: "Gagal!", text: data?.message || "Gagal menghapus perusahaan.", icon: "error" });
-      }
-    } catch (e) {
-      Swal.fire({ title: "Error!", text: e.message, icon: "error" });
-    }
-  });
-}
+//     try {
+//       const { ok, data } = await deleteCompany(id);
+//       if (ok) {
+//         Swal.fire({ title: "Terhapus!", text: "Perusahaan berhasil dihapus.", icon: "success", timer: 1500, showConfirmButton: false });
+//         loadTable(container);
+//       } else {
+//         Swal.fire({ title: "Gagal!", text: data?.message || "Gagal menghapus perusahaan.", icon: "error" });
+//       }
+//     } catch (e) {
+//       Swal.fire({ title: "Error!", text: e.message, icon: "error" });
+//     }
+//   });
+// }
 
 // ─── Content ─────────────────────────────────────────────────────
 function CompanyContent() {
@@ -325,9 +327,9 @@ function CompanyContent() {
 
   setTimeout(() => {
     loadTable(page);
-    initAddHandler(page);
-    initEditHandler(page);
-    initDeleteHandler(page);
+    // initAddHandler(page);
+    // initEditHandler(page);
+    // initDeleteHandler(page);
     page.querySelector("#btn-export").addEventListener("click", () => exportCSV(page));
   }, 0);
 
